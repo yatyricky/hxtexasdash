@@ -1,0 +1,31 @@
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    line-height: 28px;
+}
+
+#article {
+    margin: auto;
+    width: 980px;
+    border: 1px solid #DDDDDD;
+    padding-left: 40px;
+    padding-right: 40px;
+}
+
+#toc {
+    position: fixed;
+    list-style-type: none;
+    top: 10px;
+}
+
+a {
+    text-decoration: none;
+    color: #0366D6;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a:visited {
+    color: #0366D6;
+}

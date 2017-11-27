@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width,user-scalable=no" />
+    <link rel="stylesheet" type="text/css" href="style/style.css" />
+    <link rel="stylesheet" type="text/css" href="style/markdown.css" />
+    <script src="js/jquery-3.2.1.min.js"></script>
+    <script src="js/showdown.min.js"></script>
+    <title>运营文档</title>
+</head>
+<body>
+
+<ul id="toc"></ul>
+<div id="article"></div>
+
+<script type="text/javascript">
+function refresh() {
+    var page = window.location.hash.substr(1);
+
+    $.ajax({
+        type: "post",
+        dataType: "json",
+        data: {
+            postTitle: page
+        },
+        url: "api/api.php",
+        beforeSend: function(request){
+            request.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('jwt'));
+        },
+        success: function(response) {
+            if (response.result == 'success') {
+                var converter = new showdown.Converter();
+                converter.setOption('tables', true);
+                $('#article').html(converter.makeHtml(response.contents));
+
+                $("#toc").empty();
+                for(var i = 0, keys = Object.keys(response.all), l = keys.length; i < l; i ++) {
+                    var title = response.all[keys[i]].split(".")[0];
+                    var li = $("<li/>")
+                                .append($("<a/>")
+                                    .attr("href", "#" + title)
+                                    .html(title));
+
+                    $("#toc").append(li);
+                } 
+            } else {
+                window.location.replace("/hxtexasdash/#/auth");
+            }
+        },
+        error: function(error) {
+            console.log(error);
+        }
+    });
+}
+
+$(document).ready(function() {
+    refresh();
+});
+
+window.onhashchange = function () {
+    refresh();
+};
+
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+pre,
+code {
+  font-family: Menlo, Monaco, "Courier New", monospace;
+}
+
+pre {
+  background-color: #fafafa;
+  font-size: .8rem;
+  overflow-x: scroll;
+  padding: 1.125em;
+}
+
+table {
+    margin:10px;
+    border: 1px solid #eee;
+}
+table tbody tr:nth-child(odd)   { background-color:#eee; }
+table tbody tr:nth-child(even)    { background-color:#fff; }
+td, th {
+  padding: 4px;
+}
+td > p {
+  margin: 0;
+}
