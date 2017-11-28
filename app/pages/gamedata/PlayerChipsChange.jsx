@@ -1,5 +1,5 @@
 import React from 'react';
-import {Flag} from '../Flag.js';
+import {Flag} from '../../Flag.js';
 
 const moment = require('moment');
 

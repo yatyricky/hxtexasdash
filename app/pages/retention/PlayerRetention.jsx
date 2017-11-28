@@ -1,5 +1,7 @@
 import React from 'react';
-import {Flag} from '../Flag.js';
+import {Flag} from '../../Flag.js';
+import { Link } from "react-router";
+import DataStore from '../../DataStore.js';
 import ReactHighcharts from 'react-highcharts';
 
 const moment = require('moment');
@@ -8,6 +10,7 @@ class PlayerRetention extends React.Component {
 
     constructor() {
         super();
+        this.dataStore = new DataStore();
         this.postData = this.postData.bind(this);
         this.validateInput = this.validateInput.bind(this);
 
@@ -32,18 +35,26 @@ class PlayerRetention extends React.Component {
         const xhr = new XMLHttpRequest();
         this.lastRequest = xhr;
 
-        let request = `api/playerRetention.php?start=${dateStart}&end=${dateEnd}`;
+        let request = `api/ops/playerRetention.php`;
 
-        xhr.open('GET', request);
+        xhr.open('POST', request);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
+        xhr.setRequestHeader('Authorization', 'Bearer ' + this.dataStore.getJWT());
         xhr.onload = () => {
             this.lastRequest = null;
             if (xhr.status === 200) {
                 const obj = JSON.parse(xhr.responseText);
-                this.config = {categories: [], data: []};
-                this.setState({
-                    flag: Flag.success,
-                    result: obj
-                });
+                if (obj.result == 'auth') {
+                    this.config = {categories: [], data: []};
+                    this.setState({
+                        flag: Flag.success,
+                        result: obj.data
+                    });
+                } else {
+                    this.setState({
+                        flag: Flag.nothing
+                    });
+                }
             } else if (xhr.status !== 200) {
                 this.setState({
                     flag: Flag.failed,
@@ -51,7 +62,7 @@ class PlayerRetention extends React.Component {
                 });
             }
         };
-        xhr.send();
+        xhr.send(encodeURI(`start=${dateStart}&end=${dateEnd}`));
         this.setState({flag: Flag.waiting});
     }
 
@@ -106,6 +117,15 @@ class PlayerRetention extends React.Component {
 
     renderResult(flag) {
         let ret;
+        const inputFields = (
+            <div>
+                <span>选择起始日期：</span>
+                <input type="date" ref="inputDateStart" value={this.state.inputDateValueStart} className="input-sm" onChange={this.validateInput} />
+                <span>选择结束日期：</span>
+                <input type="date" ref="inputDateEnd" value={this.state.inputDateValueEnd} className="input-sm" onChange={this.validateInput} />
+            </div>
+        );
+
         switch (flag) {
             case Flag.success:
                 let rr1 = {
@@ -147,6 +167,7 @@ class PlayerRetention extends React.Component {
                 };
                 ret = (
                     <div>
+                        {inputFields}
                         <ReactHighcharts config = {highConfig} />
                         <div className="table-responsive">{this.renderTable()}</div>
                     </div>
@@ -157,6 +178,9 @@ class PlayerRetention extends React.Component {
                 break;
             case Flag.waiting:
                 ret = (<div className="loader" />);
+                break;
+            case Flag.nothing:
+                ret = (<Link to="/auth">输入神秘代码</Link>);
                 break;
             default:
                 ret = (<div />);
@@ -196,10 +220,6 @@ class PlayerRetention extends React.Component {
         return (
             <div>
                 <h1 className="page-header">留存率</h1>
-                <span>选择起始日期：</span>
-                <input type="date" ref="inputDateStart" value={this.state.inputDateValueStart} className="input-sm" onChange={this.validateInput} />
-                <span>选择结束日期：</span>
-                <input type="date" ref="inputDateEnd" value={this.state.inputDateValueEnd} className="input-sm" onChange={this.validateInput} />
                 <div>{this.renderResult(this.state.flag)}</div>
             </div>
         );

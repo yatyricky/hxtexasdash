@@ -73,14 +73,17 @@ class Navigation extends React.Component {
                         "text": "活跃用户",
                         "to": "activeUser"
                     }, {
+                        "text": "付费用户",
+                        "to": "paidUser"
+                    }, {
                         "text": "启动次数",
-                        "to": "sessions"
+                        "to": "session"
                     }, {
                         "text": "版本分布",
-                        "to": "versions"
+                        "to": "version"
                     }, {
                         "text": "渠道分布",
-                        "to": "channels"
+                        "to": "channel"
                     }, {
                         "text": "在线情况",
                         "to": "currentOnline"
@@ -100,17 +103,8 @@ class Navigation extends React.Component {
                 "category": "付费分析",
                 "options": [
                     {
-                        "text": "付费用户",
-                        "to": "paidUser"
-                    }, {
-                        "text": "付费金额",
-                        "to": "playerRetention"
-                    }, {
-                        "text": "付费转化",
-                        "to": "playerRetention"
-                    }, {
-                        "text": "ARPU",
-                        "to": "playerRetention"
+                        "text": "付费排行榜",
+                        "to": "paymentRanking"
                     }
                 ]
             }, {
@@ -118,7 +112,7 @@ class Navigation extends React.Component {
                 "options": [
                     {
                         "text": "玩家筹码存量",
-                        "to": "serverLogs"
+                        "to": "totalChips"
                     }, {
                         "text": "玩家筹码变动",
                         "to": "playerChipsChange"
@@ -129,7 +123,7 @@ class Navigation extends React.Component {
                 "options": [
                     {
                         "text": "查询玩家",
-                        "to": "playerWonRobots"
+                        "to": "queryPlayer"
                     }, {
                         "text": "修改玩家属性",
                         "to": "modPlayerStats"

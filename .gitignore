@@ -1,9 +1,9 @@
-*.log
-*.csv
 node_modules
 vendor
 bundle.js
 config.php
-test.php
 data
+test
 *.md
+*.log
+*.csv

@@ -26,4 +26,89 @@ class LogManager {
         return $arr;
     }
 
+    public static function fetchActiveUserIds($date) {
+        $config = new Zend\Config\Config(include '../config.php');
+        $fPath = $config->rootDir.DIRECTORY_SEPARATOR.'daily_active_users'.DIRECTORY_SEPARATOR.$date.'.txt';
+        if (file_exists($fPath)) {
+            $arr = file($fPath, FILE_IGNORE_NEW_LINES);
+        } else {
+            $tempSet = [];
+
+            $rawLoginPath = $config->rootDir.DIRECTORY_SEPARATOR.'login'.DIRECTORY_SEPARATOR.$date.'.txt';
+            if (file_exists($rawLoginPath)) {
+                $lines = file($rawLoginPath, FILE_IGNORE_NEW_LINES);
+                foreach ($lines as $k => $v) {
+                    $tokens = explode('|', $v);
+                    if (isset($tempSet[$tokens[1]]) == false) {
+                        $tempSet[$tokens[1]] = 1;
+                    }
+                }
+            }
+
+            $rawLogoutPath = $config->rootDir.DIRECTORY_SEPARATOR.'logout'.DIRECTORY_SEPARATOR.$date.'.txt';
+            if (file_exists($rawLogoutPath)) {
+                $lines = file($rawLogoutPath, FILE_IGNORE_NEW_LINES);
+                foreach ($lines as $k => $v) {
+                    $tokens = explode('|', $v);
+                    if (isset($tempSet[$tokens[1]]) == false) {
+                        $tempSet[$tokens[1]] = 1;
+                    }
+                }
+            }
+
+            $arr = array_keys($tempSet);
+            if (count($arr) > 0) {
+                file_put_contents($fPath, join(PHP_EOL, $arr), LOCK_EX);
+            }
+        }
+        return $arr;
+    }
+
+    public static function fetchPaidUsers($date) {
+        $config = new Zend\Config\Config(include '../config.php');
+        $cachePath = $config->rootDir.DIRECTORY_SEPARATOR.'payment'.DIRECTORY_SEPARATOR.$date.'_payment.txt';
+
+        if (file_exists($cachePath)) {
+            $lines = file($cachePath, FILE_IGNORE_NEW_LINES);
+            $arr = [];
+            foreach ($lines as $k => $v) {
+                $tokens = explode(',', $v);
+                $arr[$tokens[0]] = $tokens[1];
+            }
+        } else {
+            $rawPath = $config->rootDir.DIRECTORY_SEPARATOR.'payment'.DIRECTORY_SEPARATOR.$date.'.txt';
+            if (file_exists($rawPath)) {
+                $lines = file($rawPath, FILE_IGNORE_NEW_LINES);
+                $arr = [];
+                foreach ($lines as $k => $v) {
+                    $tokens = explode('|', $v);
+                    if (isset($arr[$tokens[1]]) == false) {
+                        $arr[$tokens[1]] = 0;
+                    }
+                    $arr[$tokens[1]] += $tokens[3];
+                }
+
+                $file = fopen($cachePath, 'w');
+                foreach ($arr as $k => $v) {
+                    fwrite($file, $k.','.$v.PHP_EOL);
+                }
+                fclose($file);
+            } else {
+                $arr = [];
+            }
+        }
+        return $arr;
+    }
+
+    public static function fetchLogins($date) {
+        $config = new Zend\Config\Config(include '../config.php');
+        $rawLoginPath = $config->rootDir.DIRECTORY_SEPARATOR.'login'.DIRECTORY_SEPARATOR.$date.'.txt';
+        if (file_exists($rawLoginPath)) {
+            $arr = file($rawLoginPath, FILE_IGNORE_NEW_LINES);
+        } else {
+            $arr = [];
+        }
+        return $arr;
+    }
+
 }

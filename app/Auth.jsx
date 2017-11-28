@@ -65,7 +65,6 @@ class Auth extends React.Component {
             this.lastRequest = null;
             if (xhr.status === 200) {
                 const resp = JSON.parse(xhr.responseText);
-                console.log(resp);
                 if (resp.result == 'success') {
                     this.setState({
                         flag: Flag.success,
