@@ -55,10 +55,10 @@ class Navigation extends React.Component {
     render() {
         const menu = [
             {
-                "category": "仪表盘",
+                "category": "系统",
                 "options": [
                     {
-                        "text": "总览",
+                        "text": "验证",
                         "to": "/"
                     }
                 ]

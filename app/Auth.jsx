@@ -92,7 +92,7 @@ class Auth extends React.Component {
         let ret;
         switch (flag) {
             case Flag.success:
-                ret = (<Link to="/">已验证</Link>);
+                ret = (<Link to="/newUser">已验证</Link>);
                 break;
             case Flag.failed:
                 ret = (<div>{inputPassword}{`解锁失败: ${this.state.result}`}</div>);

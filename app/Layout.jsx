@@ -10,7 +10,7 @@ class Layout extends React.Component {
         const { location } = this.props;
         let renderNav = true;
 
-        if (this.props.location.pathname == '/auth') {
+        if (this.props.location.pathname == '/auth' || this.props.location.pathname == '/') {
             renderNav = false;
         }
 

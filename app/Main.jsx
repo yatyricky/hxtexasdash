@@ -30,7 +30,7 @@ class Main extends React.Component {
         return (
             <Router history={hashHistory}>
                 <Route path="/" component={Layout}>
-                    <IndexRoute component={Welcome}></IndexRoute>
+                    <IndexRoute component={Auth}></IndexRoute>
                     <Route path="auth" name="auth" component={Auth}></Route>
                     <Route path="login" name="login" component={Login}></Route>
                     <Route path="newUser" name="newUser" component={NewUser}></Route>
