@@ -1,6 +1,12 @@
 <?php
 class LogManager {
 
+    function remove_utf8_bom($text) {
+        $bom = pack('H*','EFBBBF');
+        $text = preg_replace("/^$bom/", '', $text);
+        return $text;
+    }
+
     public static function fetchNewUserIds($date) {
         $config = new Zend\Config\Config(include '../config.php');
         $fPath = $config->rootDir.DIRECTORY_SEPARATOR.'register'.DIRECTORY_SEPARATOR.$date.'_accountID.txt';
@@ -99,10 +105,21 @@ class LogManager {
         }
         return $arr;
     }
-
+    
     public static function fetchLogins($date) {
         $config = new Zend\Config\Config(include '../config.php');
         $rawLoginPath = $config->rootDir.DIRECTORY_SEPARATOR.'login'.DIRECTORY_SEPARATOR.$date.'.txt';
+        if (file_exists($rawLoginPath)) {
+            $arr = file($rawLoginPath, FILE_IGNORE_NEW_LINES);
+        } else {
+            $arr = [];
+        }
+        return $arr;
+    }
+    
+    public static function fetchLogouts($date) {
+        $config = new Zend\Config\Config(include '../config.php');
+        $rawLoginPath = $config->rootDir.DIRECTORY_SEPARATOR.'logout'.DIRECTORY_SEPARATOR.$date.'.txt';
         if (file_exists($rawLoginPath)) {
             $arr = file($rawLoginPath, FILE_IGNORE_NEW_LINES);
         } else {

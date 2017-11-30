@@ -139,7 +139,7 @@ class Auth extends React.Component {
     render() {
         return (
             <div>
-                <h1 className="page-header">输入神秘代码以解锁内容</h1>
+                <h1 className="page-header auth-block">输入神秘代码以解锁内容</h1>
                 <div>{this.renderResult(this.state.flag)}</div>
             </div>
         );

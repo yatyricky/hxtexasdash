@@ -45,3 +45,7 @@ nav.sidebar > div > h3 {
   margin-left: auto;
   margin-right: 0px!important;
 }
+
+.auth-block {
+  margin-top: 10%;
+}

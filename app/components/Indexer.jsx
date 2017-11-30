@@ -12,7 +12,7 @@ class Indexer extends React.Component {
                         <span className="navbar-toggler-icon"></span>
                     </button>
 
-                    <div className="collapse navbar-collapse" id="navbarsExampleDefault">
+                    {/* <div className="collapse navbar-collapse" id="navbarsExampleDefault">
                         <ul className="navbar-nav mr-auto user-info">
                             <li className="nav-item">
                                 <a className="nav-link">黄叔</a>
@@ -22,11 +22,11 @@ class Indexer extends React.Component {
                             </li>
                         </ul>
 
-                        {/* <form className="form-inline mt-2 mt-md-0">
+                        <form className="form-inline mt-2 mt-md-0">
                             <input className="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" />
                             <button className="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-                        </form> */}
-                    </div>
+                        </form>
+                    </div> */}
                 </nav>
             </header>
         );

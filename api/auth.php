@@ -57,7 +57,7 @@ function authenticate($code = "") {
         if ($code == $config->pass) {
             $issuedAt   = time();
             $notBefore  = $issuedAt;             //Adding 10 seconds
-            $expire     = $notBefore + 60;   // Adding 4 hours
+            $expire     = $notBefore + $config->expr;   // Adding 4 hours
             $serverName = $config->serverName; // Retrieve the server name from config file
 
             $token = array(

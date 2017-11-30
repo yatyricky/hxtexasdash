@@ -61,7 +61,9 @@ class Session extends React.Component {
             entries.push(
                 <tr key={i}>
                     <td className="font-small">{result[i].date}</td>
-                    <td className="font-small">{result[i].dau}</td>
+                    <td className="font-small">{result[i].session}</td>
+                    <td className="font-small">{result[i].avgLength}</td>
+                    <td className="font-small">{result[i].sum}</td>
                 </tr>
             );
         }
@@ -71,7 +73,9 @@ class Session extends React.Component {
                 <thead>
                     <tr>
                         <th className="font-small">日期</th>
-                        <th className="font-small">活跃用户</th>
+                        <th className="font-small">启动次数</th>
+                        <th className="font-small">平均时长</th>
+                        <th className="font-small">总时长</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -103,7 +107,6 @@ class Session extends React.Component {
                     );
                 } else {
                     ret = (<Link to="/auth">输入神秘代码</Link>);
-
                 }
                 break;
             case Flag.failed:
@@ -149,7 +152,7 @@ class Session extends React.Component {
     render() {
         return (
             <div>
-                <h1 className="page-header">活跃用户</h1>
+                <h1 className="page-header">启动次数</h1>
                 <div>{this.renderResult(this.state.flag)}</div>
             </div>
         );
