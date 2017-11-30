@@ -45,7 +45,7 @@ class PaidUser extends React.Component {
             } else if (xhr.status !== 200) {
                 this.setState({
                     flag: Flag.failed,
-                    result: xhr.status
+                    result: {xhrStatus: xhr.status, xhrStatusText: xhr.statusText}
                 });
             }
         };
@@ -56,8 +56,6 @@ class PaidUser extends React.Component {
     renderTable() {
         const result = this.state.result.data.reverse();
         const entries = [];
-
-        console.log(result);
 
         for (let i = 0, n = result.length; i < n; i++) {
             entries.push(
@@ -107,21 +105,21 @@ class PaidUser extends React.Component {
         );
         switch (flag) {
             case Flag.success:
-                let {result} = this.state;
-                if (result.result == "auth") {
-                    ret = (
-                        <div>
-                            {inputFields}
-                            <div className="table-responsive">{this.renderTable()}</div>
-                        </div>
-                    );
-                } else {
-                    ret = (<Link to="/auth">输入神秘代码</Link>);
-
-                }
+                ret = (
+                    <div>
+                        {inputFields}
+                        <div className="table-responsive">{this.renderTable()}</div>
+                    </div>
+                );
                 break;
             case Flag.failed:
-                ret = (<div>{`Request Failed: ${this.state.result}`}</div>);
+                ret = (
+                    <div>
+                        <h3>载入失败 (╯‵□′)╯︵┻━┻</h3>
+                        <div>{`${this.state.result.xhrStatus}: ${this.state.result.xhrStatusText}`}</div>
+                        <Link to="/auth">输入神秘代码</Link>
+                    </div>
+                );
                 break;
             case Flag.waiting:
                 ret = (<div className="loader" />);

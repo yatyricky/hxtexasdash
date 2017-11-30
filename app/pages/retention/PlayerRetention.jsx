@@ -44,21 +44,15 @@ class PlayerRetention extends React.Component {
             this.lastRequest = null;
             if (xhr.status === 200) {
                 const obj = JSON.parse(xhr.responseText);
-                if (obj.result == 'auth') {
-                    this.config = {categories: [], data: []};
-                    this.setState({
-                        flag: Flag.success,
-                        result: obj.data
-                    });
-                } else {
-                    this.setState({
-                        flag: Flag.nothing
-                    });
-                }
+                this.config = {categories: [], data: []};
+                this.setState({
+                    flag: Flag.success,
+                    result: obj.data
+                });
             } else if (xhr.status !== 200) {
                 this.setState({
                     flag: Flag.failed,
-                    result: xhr.status
+                    result: {xhrStatus: xhr.status, xhrStatusText: xhr.statusText}
                 });
             }
         };
@@ -174,7 +168,13 @@ class PlayerRetention extends React.Component {
                 );
                 break;
             case Flag.failed:
-                ret = (<div>{`Request Failed: ${this.state.result}`}</div>);
+                ret = (
+                    <div>
+                        <h3>载入失败 (╯‵□′)╯︵┻━┻</h3>
+                        <div>{`${this.state.result.xhrStatus}: ${this.state.result.xhrStatusText}`}</div>
+                        <Link to="/auth">输入神秘代码</Link>
+                    </div>
+                );
                 break;
             case Flag.waiting:
                 ret = (<div className="loader" />);

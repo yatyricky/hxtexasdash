@@ -128,4 +128,15 @@ class LogManager {
         return $arr;
     }
 
+    public static function fetchPropertyChange($date) {
+        $config = new Zend\Config\Config(include '../config.php');
+        $fPath = $config->rootDir.DIRECTORY_SEPARATOR.'property_change'.DIRECTORY_SEPARATOR.$date.'.txt';
+        if (file_exists($fPath)) {
+            $arr = file($fPath, FILE_IGNORE_NEW_LINES);
+        } else {
+            $arr = [];
+        }
+        return $arr;
+    }
+
 }

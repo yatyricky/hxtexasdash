@@ -32,8 +32,8 @@ if ($auth['result'] == 'auth') {
 
     $ret['data'] = $daus;
 } else {
-    header($ret['header']);
     $ret['result'] = "rejected";
 }
 
+header($auth['header']);
 echo json_encode($ret);

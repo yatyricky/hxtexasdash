@@ -91,9 +91,9 @@ if ($auth['result'] == 'auth') {
 
     $ret['data'] = $data;
 } else {
-    header($ret['header']);
     $ret['result'] = "rejected";
 }
 
 // echo json_encode($ret, JSON_PRETTY_PRINT);
+header($auth['header']);
 echo json_encode($ret);

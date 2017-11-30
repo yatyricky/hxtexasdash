@@ -4,7 +4,6 @@ import { IndexLink, Link } from "react-router";
 class NavigationOptions extends React.Component {
 
     render() {
-                    // console.log( this.props.location.pathname);
         const items = this.props.list.map((item, index) => 
             {
                 if (item.to == "/") {
