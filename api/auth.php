@@ -36,6 +36,7 @@ function authenticate($code = "") {
                  * return protected asset
                  */
                 $resp['result'] = 'auth';
+                $resp['header'] = 'HTTP/1.0 200 OK';
 
             } catch (Exception $e) {
                 /*
@@ -71,6 +72,7 @@ function authenticate($code = "") {
             $jwt = JWT::encode($token, $secretKey);
 
             $resp['result'] = 'success';
+            $resp['header'] = 'HTTP/1.0 200 OK';
             $resp['jwt'] = $jwt;
         } else {
             /*

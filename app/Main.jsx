@@ -5,6 +5,7 @@ import { Router, Route, IndexRoute, hashHistory } from "react-router";
 import Layout from './Layout.jsx';
 import Welcome from './pages/Welcome.jsx';
 import Auth from './Auth.jsx';
+import Login from './components/Login.jsx';
 
 import NewUser from './pages/user/NewUser.jsx';
 import ActiveUser from './pages/user/ActiveUser.jsx';
@@ -31,6 +32,7 @@ class Main extends React.Component {
                 <Route path="/" component={Layout}>
                     <IndexRoute component={Welcome}></IndexRoute>
                     <Route path="auth" name="auth" component={Auth}></Route>
+                    <Route path="login" name="login" component={Login}></Route>
                     <Route path="newUser" name="newUser" component={NewUser}></Route>
                     <Route path="activeUser" name="activeUser" component={ActiveUser}></Route>
                     <Route path="paidUser" name="paidUser" component={PaidUser}></Route>

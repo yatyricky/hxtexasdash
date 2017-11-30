@@ -4,25 +4,26 @@ import { IndexLink, Link } from "react-router";
 class NavigationOptions extends React.Component {
 
     render() {
+                    // console.log( this.props.location.pathname);
         const items = this.props.list.map((item, index) => 
             {
                 if (item.to == "/") {
                     return (
-                        <li key={index}>
-                            <IndexLink to={item.to} activeClassName="active">{item.text}</IndexLink>
+                        <li className="nav-item" key={index}>
+                            <IndexLink to={item.to} className="nav-link" activeClassName="nav-link active">{item.text}</IndexLink>
                         </li>
                     );
                 } else {
                     return (
-                        <li key={index}>
-                            <Link to={item.to} activeClassName="active">{item.text}</Link>
+                        <li className="nav-item" key={index}>
+                            <Link to={item.to} className="nav-link" activeClassName="nav-link active">{item.text}</Link>
                         </li>
                     );
                 }
             }
         );
         return (
-            <ul className="nav nav-sidebar">
+            <ul className="nav nav-pills flex-column">
                 {items}
             </ul>
         );
@@ -42,9 +43,9 @@ class NavigationCategory extends React.Component {
             )
         );
         return (
-            <div className="col-sm-3 col-md-2 sidebar">
+            <nav className="col-sm-3 col-md-2 d-none d-sm-block bg-light sidebar">
                 {categories}
-            </div>
+            </nav>
         );
     }
 
@@ -55,7 +56,7 @@ class Navigation extends React.Component {
     render() {
         const menu = [
             {
-                "category": "超屌德州",
+                "category": "仪表盘",
                 "options": [
                     {
                         "text": "总览",

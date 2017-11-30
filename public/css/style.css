@@ -1,4 +1,4 @@
-body {
+/*body {
   padding-top: 40px;
   padding-bottom: 40px;
   background-color: #eee;
@@ -35,4 +35,13 @@ body {
   margin-bottom: 10px;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
+}*/
+
+nav.sidebar > div > h3 {
+  padding-left: .5em;
+}
+
+.user-info {
+  margin-left: auto;
+  margin-right: 0px!important;
 }

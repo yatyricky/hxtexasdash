@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 let instance = null;
 
 export default class DataStore {
@@ -34,6 +36,25 @@ export default class DataStore {
 
     setJWT(jwt) {
         localStorage.setItem('jwt', jwt);
+    }
+
+    isAuthenticated() {
+        const axiosOptions = {
+            method: 'POST',
+            url: 'api/checkAuth.php',
+            data: '',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+                'Authorization': 'Bearer ' + this.getJWT()
+            },
+            json: true
+        };
+        axios(axiosOptions).then(response => {
+            return true;
+        }).catch(error => {
+            return false;
+        });
+        return false;
     }
 
 }

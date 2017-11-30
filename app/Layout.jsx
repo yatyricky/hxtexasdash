@@ -1,22 +1,31 @@
 import React from "react";
-import { Link } from "react-router";
 
+import Indexer from './components/Indexer.jsx';
 import Navigation from './Navigation.jsx';
+import DataStore from './DataStore.js';
 
 class Layout extends React.Component {
 
     render() {
         const { location } = this.props;
+        let renderNav = true;
+
+        if (this.props.location.pathname == '/auth') {
+            renderNav = false;
+        }
+
         return (
-            <div className="container-fluid">
-                <div className="row">
-                    <Navigation location={location} />
-                    <div className="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-                        {this.props.children}
+            <div>
+                <Indexer />
+                <div className="container-fluid">
+                    <div className="row">
+                        {renderNav == true ? <Navigation location={location} /> : null}
+                        <div className="col-sm-9 ml-sm-auto col-md-10 pt-3">
+                            {this.props.children}
+                        </div>
                     </div>
                 </div>
             </div>
-
         );
     }
     
