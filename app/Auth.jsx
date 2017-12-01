@@ -1,6 +1,9 @@
 import React from 'react';
 import DataStore from './DataStore.js';
-import { Link } from 'react-router';
+import { Link, hashHistory } from 'react-router';
+import axios from 'axios';
+import { CancelToken } from 'axios';
+
 import {Flag} from './Flag.js';
 
 class Auth extends React.Component {
@@ -16,86 +19,104 @@ class Auth extends React.Component {
         }
     }
 
+    redirect() {
+        const redirect = Object.prototype.hasOwnProperty.call(this.props.location.query, 'back') ? this.props.location.query['back'] : "/newUser";
+        hashHistory.push(redirect);
+    }
+
     postData(password) {
         if (this.lastRequest != null) {
-            this.lastRequest.abort();
+            this.lastRequest.cancel();
+        }
+        
+        const CancelToken = axios.CancelToken;
+        const source = CancelToken.source();
+        this.lastRequest = source;
+
+        const axiosConfig = {
+            url: 'api/login.php',
+            method: 'post',
+            data: encodeURI('do=login&code=' + password),
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+            },
+            cancelToken: source.token
         }
 
-        const xhr = new XMLHttpRequest();
-        this.lastRequest = xhr;
-        xhr.open('POST', 'api/login.php');
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.onload = () => {
-            this.lastRequest = null;
-            if (xhr.status === 200) {
-                const resp = JSON.parse(xhr.responseText);
-                if (resp.result == 'success') {
-                    this.dataStore.setJWT(resp.jwt);
-                    this.setState({
-                        flag: Flag.success
-                    });
-                } else {
-                    this.setState({
-                        flag: Flag.failed,
-                        result: "错误代码"
-                    });
-                }
-            } else if (xhr.status !== 200) {
-                this.setState({
-                    flag: Flag.failed,
-                    result: xhr.status
-                });
-            }
-        };
-        xhr.send(encodeURI('do=login&code=' + password));
+        const axiosRequest = axios(axiosConfig).then((response) => {
+            this.dataStore.setJWT(response.data.jwt);
+            this.setState({
+                flag: Flag.success,
+                result: response.data
+            });
+            this.redirect();
+        }).catch((error) => {
+            this.setState({
+                flag: Flag.failed,
+                result: error.response
+            });
+        });;
+        
         this.setState({flag: Flag.waiting});
     }
 
     authenticate() {
         if (this.lastRequest != null) {
-            this.lastRequest.abort();
+            this.lastRequest.cancel();
+        }        
+        
+        const CancelToken = axios.CancelToken;
+        const source = CancelToken.source();
+        this.lastRequest = source;
+
+        const axiosConfig = {
+            url: 'api/login.php',
+            method: 'post',
+            data: encodeURI('do=auth'),
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+                'Authorization': 'Bearer ' + this.dataStore.getJWT()
+            },
+            cancelToken: source.token
         }
 
-        const xhr = new XMLHttpRequest();
-        this.lastRequest = xhr;
-
-        xhr.open('POST', 'api/login.php');
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
-        xhr.setRequestHeader('Authorization', 'Bearer ' + this.dataStore.getJWT());
-        xhr.onload = () => {
-            this.lastRequest = null;
-            if (xhr.status === 200) {
-                const resp = JSON.parse(xhr.responseText);
-                if (resp.result == 'success') {
-                    this.setState({
-                        flag: Flag.success,
-                        result: JSON.parse(xhr.responseText)
-                    });
-                } else {
-                    this.setState({
-                        flag: Flag.nothing
-                    });
-                }
-            } else if (xhr.status !== 200) {
-                this.setState({
-                    flag: Flag.failed,
-                    result: xhr.status
-                });
-            }
-        };
-        xhr.send(encodeURI("do=auth"));
+        const axiosRequest = axios(axiosConfig).then((response) => {
+            this.setState({
+                flag: Flag.success,
+                result: response.data
+            });
+            this.redirect();
+        }).catch((error) => {
+            this.setState({
+                flag: Flag.nothing,
+                result: error.response
+            });
+        });;
+        
         this.setState({flag: Flag.waiting});
     }
 
     renderResult(flag) {
-        const inputPassword = (<input type="password" ref="password" className="input-sm" onChange={this.validateInput} />);
+        const inputPassword = (
+            <input
+                type="password"
+                ref="password"
+                className="input-sm"
+                onChange={this.validateInput}
+            />
+        );
         let ret;
         switch (flag) {
             case Flag.success:
                 ret = (<Link to="/newUser">已验证</Link>);
                 break;
             case Flag.failed:
-                ret = (<div>{inputPassword}{`解锁失败: ${this.state.result}`}</div>);
+                ret = (
+                    <div>
+                        <div>{inputPassword}</div>
+                        <div>{`解锁失败 (╯‵□′)╯︵┻━┻ (${this.state.result.status}: ${this.state.result.statusText})`}</div>
+                    </div>
+                );
                 break;
             case Flag.waiting:
                 ret = (<div className="loader" />);
@@ -115,12 +136,14 @@ class Auth extends React.Component {
     }
 
     componentDidMount() {
-        this.authenticate();
+        if (Object.prototype.hasOwnProperty.call(this.props.location.query, 'back') == false) {
+            this.authenticate();
+        }
     }
 
     componentWillUnmount() {
         if (this.lastRequest != null) {
-            this.lastRequest.abort();
+            this.lastRequest.cancel();
         }
     }
 
@@ -132,7 +155,6 @@ class Auth extends React.Component {
             this.setState({
                 flag: Flag.nothing
             });
-
         }
     }
 

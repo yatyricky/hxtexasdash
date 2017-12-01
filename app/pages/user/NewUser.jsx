@@ -1,5 +1,8 @@
 import React from 'react';
-import { Link } from "react-router";
+import { Link, hashHistory } from "react-router";
+import axios from 'axios';
+import { CancelToken } from 'axios';
+
 import {Flag} from '../../Flag.js';
 import DataStore from '../../DataStore.js';
 
@@ -26,30 +29,37 @@ class NewUser extends React.Component {
 
     postData(dateStart, dateEnd) {
         if (this.lastRequest != null) {
-            this.lastRequest.abort();
+            this.lastRequest.cancel();
         }
 
-        const xhr = new XMLHttpRequest();
-        this.lastRequest = xhr;
+        const CancelToken = axios.CancelToken;
+        const source = CancelToken.source();
+        this.lastRequest = source;
 
-        xhr.open('POST', 'api/ops/newUser.php');
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
-        xhr.setRequestHeader('Authorization', 'Bearer ' + this.dataStore.getJWT());
-        xhr.onload = () => {
-            this.lastRequest = null;
-            if (xhr.status === 200) {
-                this.setState({
-                    flag: Flag.success,
-                    result: JSON.parse(xhr.responseText)
-                });
-            } else if (xhr.status !== 200) {
-                this.setState({
-                    flag: Flag.failed,
-                    result: {xhrStatus: xhr.status, xhrStatusText: xhr.statusText}
-                });
-            }
-        };
-        xhr.send(encodeURI(`start=${dateStart}&end=${dateEnd}`));
+        const axiosConfig = {
+            url: 'api/ops/newUser.php',
+            method: 'post',
+            data: encodeURI(`start=${dateStart}&end=${dateEnd}`),
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+                'Authorization': 'Bearer ' + this.dataStore.getJWT()
+            },
+            cancelToken: source.token
+        }
+
+        const axiosRequest = axios(axiosConfig).then((response) => {
+            this.setState({
+                flag: Flag.success,
+                result: response.data
+            });
+        }).catch((error) => {
+            this.setState({
+                flag: Flag.failed,
+                result: error.response
+            });
+            hashHistory.push(`/auth?back=${this.props.location.pathname}`);
+        });;
+
         this.setState({flag: Flag.waiting});
     }
 
@@ -104,7 +114,7 @@ class NewUser extends React.Component {
                 ret = (
                     <div>
                         <h3>载入失败 (╯‵□′)╯︵┻━┻</h3>
-                        <div>{`${this.state.result.xhrStatus}: ${this.state.result.xhrStatusText}`}</div>
+                        <div>{`${this.state.result.status}: ${this.state.result.statusText}`}</div>
                         <Link to="/auth">输入神秘代码</Link>
                     </div>
                 );
@@ -124,7 +134,7 @@ class NewUser extends React.Component {
 
     componentWillUnmount() {
         if (this.lastRequest != null) {
-            this.lastRequest.abort();
+            this.lastRequest.cancel();
         }
     }
 

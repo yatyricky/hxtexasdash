@@ -1,8 +1,11 @@
 import React from 'react';
-import {Flag} from '../../Flag.js';
-import { Link } from "react-router";
-import DataStore from '../../DataStore.js';
+import { Link, hashHistory } from "react-router";
 import ReactHighcharts from 'react-highcharts';
+import axios from 'axios';
+import { CancelToken } from 'axios';
+
+import {Flag} from '../../Flag.js';
+import DataStore from '../../DataStore.js';
 
 const moment = require('moment');
 
@@ -29,34 +32,38 @@ class PlayerRetention extends React.Component {
 
     postData(dateStart, dateEnd) {
         if (this.lastRequest != null) {
-            this.lastRequest.abort();
+            this.lastRequest.cancel();
+        }
+        
+        const CancelToken = axios.CancelToken;
+        const source = CancelToken.source();
+        this.lastRequest = source;
+
+        const axiosConfig = {
+            url: 'api/ops/playerRetention.php',
+            method: 'post',
+            data: encodeURI(`start=${dateStart}&end=${dateEnd}`),
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+                'Authorization': 'Bearer ' + this.dataStore.getJWT()
+            },
+            cancelToken: source.token
         }
 
-        const xhr = new XMLHttpRequest();
-        this.lastRequest = xhr;
+        const axiosRequest = axios(axiosConfig).then((response) => {
+            this.config = {categories: [], data: []};
+            this.setState({
+                flag: Flag.success,
+                result: response.data.data
+            });
+        }).catch((error) => {
+            this.setState({
+                flag: Flag.failed,
+                result: error.response
+            });
+            hashHistory.push(`/auth?back=${this.props.location.pathname}`);
+        });;
 
-        let request = `api/ops/playerRetention.php`;
-
-        xhr.open('POST', request);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
-        xhr.setRequestHeader('Authorization', 'Bearer ' + this.dataStore.getJWT());
-        xhr.onload = () => {
-            this.lastRequest = null;
-            if (xhr.status === 200) {
-                const obj = JSON.parse(xhr.responseText);
-                this.config = {categories: [], data: []};
-                this.setState({
-                    flag: Flag.success,
-                    result: obj.data
-                });
-            } else if (xhr.status !== 200) {
-                this.setState({
-                    flag: Flag.failed,
-                    result: {xhrStatus: xhr.status, xhrStatusText: xhr.statusText}
-                });
-            }
-        };
-        xhr.send(encodeURI(`start=${dateStart}&end=${dateEnd}`));
         this.setState({flag: Flag.waiting});
     }
 
@@ -171,7 +178,7 @@ class PlayerRetention extends React.Component {
                 ret = (
                     <div>
                         <h3>载入失败 (╯‵□′)╯︵┻━┻</h3>
-                        <div>{`${this.state.result.xhrStatus}: ${this.state.result.xhrStatusText}`}</div>
+                        <div>{`${this.state.result.status}: ${this.state.result.statusText}`}</div>
                         <Link to="/auth">输入神秘代码</Link>
                     </div>
                 );
@@ -194,7 +201,7 @@ class PlayerRetention extends React.Component {
 
     componentWillUnmount() {
         if (this.lastRequest != null) {
-            this.lastRequest.abort();
+            this.lastRequest.cancel();
         }
     }
 
