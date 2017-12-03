@@ -3,13 +3,22 @@ import { render } from 'react-dom';
 
 class Indexer extends React.Component {
 
+    constructor() {
+        super();
+        this.clickToggle = this.clickToggle.bind(this);
+    }
+
+    clickToggle() {
+        this.props.toggleNav();
+    }
+
     render() {
         return (
             <header>
                 <nav className="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
                     <a className="navbar-brand" href="#">超屌德州</a>
                     <button className="navbar-toggler d-lg-none" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-                        <span className="navbar-toggler-icon"></span>
+                        <span className="navbar-toggler-icon" onClick={this.clickToggle}></span>
                     </button>
 
                     {/* <div className="collapse navbar-collapse" id="navbarsExampleDefault">

@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { IndexLink, Link } from "react-router";
 
 class NavigationOptions extends React.Component {
@@ -41,8 +42,9 @@ class NavigationCategory extends React.Component {
                 </div>
             )
         );
+        const nClass = this.props.toggleDNone ? '' : 'd-none';
         return (
-            <nav className="col-sm-3 col-md-2 d-none d-sm-block bg-light sidebar">
+            <nav className={`col-sm-3 col-md-2 ${nClass} d-sm-block bg-light sidebar`}>
                 {categories}
             </nav>
         );
@@ -122,9 +124,7 @@ class Navigation extends React.Component {
                 ]
             }
         ];
-        return (
-            <NavigationCategory list={menu} />
-        );
+        return (<NavigationCategory list={menu} toggleDNone={this.props.toggleDNone} />);
     }
 
 }
