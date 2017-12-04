@@ -121,6 +121,9 @@ class Navigation extends React.Component {
                         "text": "修改玩家属性",
                         "to": "modPlayerStats"
                     }, {
+                        "text": "查询牌桌",
+                        "to": "queryTable"
+                    }, {
                         "text": "活动配置",
                         "to": "eventConfig"
                     }

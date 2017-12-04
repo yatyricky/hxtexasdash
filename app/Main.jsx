@@ -24,6 +24,7 @@ import PlayerChipsChange from './pages/gamedata/PlayerChipsChange.jsx';
 
 import QueryPlayer from './pages/tools/QueryPlayer.jsx';
 import ModPlayerStats from './pages/tools/ModPlayerStats.jsx';
+import QueryTable from './pages/tools/QueryTable.jsx';
 
 class Main extends React.Component {
     render () {
@@ -50,6 +51,7 @@ class Main extends React.Component {
 
                     <Route path="queryPlayer" name="queryPlayer" component={QueryPlayer}></Route>
                     <Route path="modPlayerStats" name="modPlayerStats" component={ModPlayerStats}></Route>
+                    <Route path="queryTable" name="queryTable" component={QueryTable}></Route>
                 </Route>
             </Router>
         );
