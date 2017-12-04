@@ -139,4 +139,26 @@ class LogManager {
         return $arr;
     }
 
+    public static function fetchTotalChips() {
+        $config = new Zend\Config\Config(include '../config.php');
+        $fPath = $config->rootDir.DIRECTORY_SEPARATOR.'total_chips'.DIRECTORY_SEPARATOR.'total_chips.txt';
+        if (file_exists($fPath)) {
+            $arr = file($fPath, FILE_IGNORE_NEW_LINES);
+        } else {
+            $arr = [];
+        }
+        return $arr;
+    }
+
+    public static function fetchPokerResult($date) {
+        $config = new Zend\Config\Config(include '../config.php');
+        $rawLoginPath = $config->rootDir.DIRECTORY_SEPARATOR.'poker_result'.DIRECTORY_SEPARATOR.$date.'.txt';
+        if (file_exists($rawLoginPath)) {
+            $arr = file($rawLoginPath, FILE_IGNORE_NEW_LINES);
+        } else {
+            $arr = [];
+        }
+        return $arr;
+    }
+
 }

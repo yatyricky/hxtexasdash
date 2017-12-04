@@ -104,7 +104,7 @@ class Navigation extends React.Component {
                 "category": "游戏数据",
                 "options": [
                     {
-                        "text": "玩家筹码存量",
+                        "text": "库存变化",
                         "to": "totalChips"
                     }, {
                         "text": "玩家筹码变动",
@@ -112,7 +112,7 @@ class Navigation extends React.Component {
                     }
                 ]
             }, {
-                "category": "GM工具",
+                "category": "运营工具",
                 "options": [
                     {
                         "text": "查询玩家",
@@ -120,6 +120,9 @@ class Navigation extends React.Component {
                     }, {
                         "text": "修改玩家属性",
                         "to": "modPlayerStats"
+                    }, {
+                        "text": "活动配置",
+                        "to": "eventConfig"
                     }
                 ]
             }
