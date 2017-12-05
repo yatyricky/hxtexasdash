@@ -6,7 +6,7 @@ header('Content-type: application/json');
 $ret = [];
 
 if ($_POST['do'] == 'login') {
-    $auth = authenticate(md5($_POST['code']));
+    $auth = authenticate($_POST['name'], $_POST['code']);
     if ($auth['result'] == 'success') {
         $ret['result'] = 'success';
         $ret['jwt'] = $auth['jwt'];

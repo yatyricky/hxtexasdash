@@ -13,9 +13,13 @@ class Auth extends React.Component {
         this.dataStore = new DataStore();
         this.validateInput = this.validateInput.bind(this);
         this.postData = this.postData.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
         this.lastRequest = null;
+        
         this.state = {
-            "flag": Flag.nothing
+            "flag": Flag.nothing,
+            "usernameValue": "",
+            "passwordValue": ""
         }
     }
 
@@ -24,7 +28,7 @@ class Auth extends React.Component {
         hashHistory.push(redirect);
     }
 
-    postData(password) {
+    postData(username, password) {
         if (this.lastRequest != null) {
             this.lastRequest.cancel();
         }
@@ -36,7 +40,7 @@ class Auth extends React.Component {
         const axiosConfig = {
             url: 'api/login.php',
             method: 'post',
-            data: encodeURI('do=login&code=' + password),
+            data: encodeURI(`do=login&name=${username}&code=${password}`),
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
             },
@@ -96,45 +100,6 @@ class Auth extends React.Component {
         this.setState({flag: Flag.waiting});
     }
 
-    renderResult(flag) {
-        const inputPassword = (
-            <input
-                type="password"
-                ref="password"
-                className="input-sm"
-                onChange={this.validateInput}
-            />
-        );
-        let ret;
-        switch (flag) {
-            case Flag.success:
-                ret = (<Link to="/newUser">已验证</Link>);
-                break;
-            case Flag.failed:
-                ret = (
-                    <div>
-                        <div>{inputPassword}</div>
-                        <div>{`解锁失败 (╯‵□′)╯︵┻━┻ (${this.state.result.status}: ${this.state.result.statusText})`}</div>
-                    </div>
-                );
-                break;
-            case Flag.waiting:
-                ret = (<div className="loader" />);
-                break;
-            case Flag.nothing:
-                ret = (
-                    <div>
-                        {inputPassword}
-                        <div>未验证</div>
-                    </div>
-                );
-                break;
-            default:
-                ret = (<div/>);
-        }
-        return ret;
-    }
-
     componentDidMount() {
         if (Object.prototype.hasOwnProperty.call(this.props.location.query, 'back') == false) {
             this.authenticate();
@@ -148,23 +113,71 @@ class Auth extends React.Component {
     }
 
     validateInput() {
-        let password = this.refs.password.value;
-        if (password.length == 8) {
-            this.postData(password);
-        } else {
-            this.setState({
-                flag: Flag.nothing
-            });
-        }
+        this.setState({
+            usernameValue: this.refs.username.value,
+            passwordValue: this.refs.password.value
+        })
+    }
+
+    handleSubmit(e) {
+        e.preventDefault();
+        this.postData(this.state.usernameValue, this.state.passwordValue);
     }
 
     render() {
-        return (
-            <div>
-                <h1 className="page-header auth-block">输入神秘代码以解锁内容</h1>
-                <div>{this.renderResult(this.state.flag)}</div>
-            </div>
+        const formDom = (
+            <form className="auth-block col-md-2 offset-md-3" onSubmit={this.handleSubmit}>
+                <h2 className="page-header">登陆</h2>
+                <div className="form-group">
+                    <input
+                        type="text"
+                        ref="username"
+                        className="input-sm form-control"
+                        placeholder="账号"
+                        onChange={this.validateInput}
+                    />
+                </div>
+                <div className="form-group">
+                    <input
+                        type="password"
+                        ref="password"
+                        className="input-sm form-control"
+                        placeholder="密码"
+                        onChange={this.validateInput}
+                    />
+                </div>
+                <div className="form-group">
+                    <button type="submit" className="form-control btn btn-primary">提交</button>
+                </div>
+            </form>
         );
+        let ret;
+        switch (this.state.flag) {
+            case Flag.success:
+                ret = (<Link to="/newUser">已验证</Link>);
+                break;
+            case Flag.failed:
+                ret = (
+                    <div>
+                        <div>{formDom}</div>
+                        <div>{`验证失败 (╯‵□′)╯︵┻━┻ (${this.state.result.status}: ${this.state.result.statusText})`}</div>
+                    </div>
+                );
+                break;
+            case Flag.waiting:
+                ret = (<div className="loader" />);
+                break;
+            case Flag.nothing:
+                ret = (
+                    <div>
+                        {formDom}
+                    </div>
+                );
+                break;
+            default:
+                ret = (<div/>);
+        }
+        return ret;
     }
 
 }

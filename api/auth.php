@@ -1,9 +1,10 @@
 <?php
 require_once('vendor/autoload.php');
+require_once('conn.php');
 use \Firebase\JWT\JWT;
 use Zend\Http\PhpEnvironment\Request;
 
-function authenticate($code = "") {
+function authenticate($name = "", $code = "") {
 
     $resp = [];
 
@@ -17,6 +18,7 @@ function authenticate($code = "") {
 
     /*
      * Look for the 'authorization' header
+     * For in-app requests
      */
     if ($authHeader) {
         /*
@@ -54,33 +56,49 @@ function authenticate($code = "") {
             $resp['header'] = 'HTTP/1.0 400 Bad Request';
         }
     } else {
-        if ($code == $config->pass) {
-            $issuedAt   = time();
-            $notBefore  = $issuedAt;             //Adding 10 seconds
-            $expire     = $notBefore + $config->expr;   // Adding 4 hours
-            $serverName = $config->serverName; // Retrieve the server name from config file
+        /*
+         * For login
+         */
+        $dbhelper = new DBHelper();
+        $link = $dbhelper->conn;
+        $query = "SELECT * FROM `user` WHERE `username`='".addslashes($name)."'";
+        $result = mysqli_query($link, $query);
+        if ($result) {
+            $rows = mysqli_fetch_all($result, MYSQLI_ASSOC);
+            if (count($rows) > 0) {
+                if (password_verify($code, $rows[0]['encpass'])) {
+                    $issuedAt   = time();
+                    $notBefore  = $issuedAt;             //Adding 10 seconds
+                    $expire     = $notBefore + $config->expr;   // Adding 4 hours
+                    $serverName = $config->serverName; // Retrieve the server name from config file
 
-            $token = array(
-                "iss" => $serverName,
-                "aud" => "http://something.else",
-                "iat" => $issuedAt,
-                "nbf" => $notBefore,
-                'exp'  => $expire            // Expire
-            );
-            $secretKey = base64_decode($config->jwtKey);
+                    $token = array(
+                        "iss" => $serverName,
+                        "aud" => "http://something.else",
+                        "iat" => $issuedAt,
+                        "nbf" => $notBefore,
+                        'exp' => $expire            // Expire
+                    );
+                    $secretKey = base64_decode($config->jwtKey);
 
-            $jwt = JWT::encode($token, $secretKey);
+                    $jwt = JWT::encode($token, $secretKey);
 
-            $resp['result'] = 'success';
-            $resp['header'] = 'HTTP/1.0 200 OK';
-            $resp['jwt'] = $jwt;
+                    $resp['result'] = 'success';
+                    $resp['header'] = 'HTTP/1.0 200 OK';
+                    $resp['jwt'] = $jwt;
+                } else {
+                    $resp['result'] = 'Wrong password';
+                    $resp['header'] = 'HTTP/1.0 401 Unauthorized';
+                }
+            } else {
+                $resp['result'] = 'No such user';
+                $resp['header'] = 'HTTP/1.0 401 Unauthorized';
+            }
         } else {
-            /*
-             * The request lacks the authorization token
-             */
-            $resp['result'] = 'reject';
+            $resp['result'] = 'Bad query';
             $resp['header'] = 'HTTP/1.0 400 Bad Request';
         }
+        unset($link);
     }
 
     return $resp;
