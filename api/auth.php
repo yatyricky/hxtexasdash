@@ -32,8 +32,7 @@ function authenticate($name = "", $code = "") {
                 $decoded = JWT::decode($jwt, $secretKey, array('HS256'));
 
                 // Authorized, JWT is valid
-                $resp['result'] = 'auth';
-                $resp['header'] = 'HTTP/1.0 200 OK';
+                // But needs to verify page accessbility
 
                 // check permission for certain page
                 if ($_POST['view']) {
@@ -46,15 +45,17 @@ function authenticate($name = "", $code = "") {
                     $fpagesAllowed = array_flip($pagesAllowed);
                     if (isset($fpagesAllowed[$view])) {
                         // user has access to this page
-                        $resp['perm'] = 'granted';
+                        $resp['result'] = 'auth';
+                        $resp['header'] = 'HTTP/1.0 200 OK';
                         $resp['ugroup'] = $ugroup;
                     } else {
                         // deny requested page
                         $resp['result'] = 'Rejected: no access to requested page';
-                        $resp['header'] = 'HTTP/1.0 401 Unauthorized';
+                        $resp['header'] = 'HTTP/1.0 403 Forbidden';
                     }
                 } else {
-                    $resp['perm'] = 'No page request';
+                    $resp['result'] = 'Rejected: no page request';
+                    $resp['header'] = 'HTTP/1.0 400 Bad Request';
                 }
             } catch (Exception $e) {
                 /*

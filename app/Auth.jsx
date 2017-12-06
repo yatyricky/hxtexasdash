@@ -75,7 +75,7 @@ class Auth extends React.Component {
         const axiosConfig = {
             url: 'api/login.php',
             method: 'post',
-            data: encodeURI('do=auth'),
+            data: encodeURI(`view=${this.props.location.pathname}&do=auth`),
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
                 'Authorization': 'Bearer ' + this.dataStore.getJWT()

@@ -57,8 +57,8 @@ class Session extends React.Component {
                 flag: Flag.failed,
                 result: error.response
             });
-            hashHistory.push(`/auth?back=${this.props.location.pathname}`);
-        });;
+            hashHistory.push(`/auth${error.response.status == 403 ? '' : '?back=' + this.props.location.pathname}`);
+        });
 
         this.setState({flag: Flag.waiting});
     }

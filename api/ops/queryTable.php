@@ -63,7 +63,7 @@ if ($auth['result'] == 'auth') {
 
     $ret['data'] = $datum;
 } else {
-    $ret['result'] = "rejected";
+    $ret['result'] = $auth['result'];
 }
 
 header($auth['header']);
