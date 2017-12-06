@@ -3,9 +3,7 @@ import {render} from 'react-dom';
 import { Router, Route, IndexRoute, hashHistory } from "react-router";
 
 import Layout from './Layout.jsx';
-import Welcome from './pages/Welcome.jsx';
 import Auth from './Auth.jsx';
-import Login from './components/Login.jsx';
 
 import NewUser from './pages/user/NewUser.jsx';
 import ActiveUser from './pages/user/ActiveUser.jsx';
@@ -26,6 +24,8 @@ import QueryPlayer from './pages/tools/QueryPlayer.jsx';
 import ModPlayerStats from './pages/tools/ModPlayerStats.jsx';
 import QueryTable from './pages/tools/QueryTable.jsx';
 
+import Account from './Account.jsx';
+
 class Main extends React.Component {
     render () {
         return (
@@ -33,7 +33,6 @@ class Main extends React.Component {
                 <Route path="/" component={Layout}>
                     <IndexRoute component={Auth}></IndexRoute>
                     <Route path="auth" name="auth" component={Auth}></Route>
-                    <Route path="login" name="login" component={Login}></Route>
                     <Route path="newUser" name="newUser" component={NewUser}></Route>
                     <Route path="activeUser" name="activeUser" component={ActiveUser}></Route>
                     <Route path="paidUser" name="paidUser" component={PaidUser}></Route>
@@ -52,6 +51,8 @@ class Main extends React.Component {
                     <Route path="queryPlayer" name="queryPlayer" component={QueryPlayer}></Route>
                     <Route path="modPlayerStats" name="modPlayerStats" component={ModPlayerStats}></Route>
                     <Route path="queryTable" name="queryTable" component={QueryTable}></Route>
+
+                    <Route path="account" name="account" component={Account}></Route>
                 </Route>
             </Router>
         );

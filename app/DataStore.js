@@ -8,6 +8,7 @@ export default class DataStore {
         if (!instance) {
             instance = this;
         }
+        this.access = [];
         return instance;
     }
 
@@ -36,6 +37,18 @@ export default class DataStore {
 
     setJWT(jwt) {
         localStorage.setItem('jwt', jwt);
+    }
+
+    setAccess(allowedPages) {
+        localStorage.setItem('access', JSON.stringify(allowedPages));
+        
+    }
+
+    getAccess() {
+        if (localStorage.getItem("access") === null) {
+            return [];
+        }
+        return JSON.parse(localStorage.getItem('access'));
     }
 
     isAuthenticated() {

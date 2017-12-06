@@ -34,7 +34,9 @@ class Layout extends React.Component {
 
     renderNav() {
         let renderNav = true;
-        if (this.props.location.pathname == '/auth' || this.props.location.pathname == '/') {
+        if (this.props.location.pathname == '/'
+            || this.props.location.pathname == '/auth'
+            || this.props.location.pathname == '/account') {
             renderNav = false;
         }
         return renderNav == true ? <Navigation toggleDNone={this.state.showNav} location={location} /> : null;

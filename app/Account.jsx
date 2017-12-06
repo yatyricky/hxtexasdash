@@ -1,12 +1,12 @@
 import React from 'react';
-import DataStore from './DataStore.js';
 import { Link, hashHistory } from 'react-router';
 import axios from 'axios';
 import { CancelToken } from 'axios';
 
+import DataStore from './DataStore.js';
 import {Flag} from './Flag.js';
 
-class Auth extends React.Component {
+class Account extends React.Component {
 
     constructor() {
         super();
@@ -15,20 +15,21 @@ class Auth extends React.Component {
         this.postData = this.postData.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.lastRequest = null;
-        
+
         this.state = {
             "flag": Flag.nothing,
             "usernameValue": "",
-            "passwordValue": ""
+            "passwordValue": "",
+            "usergroupValue": "user"
         }
     }
 
     redirect() {
-        const redirect = Object.prototype.hasOwnProperty.call(this.props.location.query, 'back') ? this.props.location.query['back'] : "/newUser";
-        hashHistory.push(redirect);
+        hashHistory.push("/");
     }
 
-    postData(username, password) {
+    postData() {
+        const {usernameValue, passwordValue, usergroupValue} = this.state;
         if (this.lastRequest != null) {
             this.lastRequest.cancel();
         }
@@ -38,11 +39,12 @@ class Auth extends React.Component {
         this.lastRequest = source;
 
         const axiosConfig = {
-            url: 'api/login.php',
+            url: 'api/createAccount.php',
             method: 'post',
-            data: encodeURI(`do=login&name=${username}&code=${password}`),
+            data: encodeURI(`view=${this.props.location.pathname}&name=${usernameValue}&code=${passwordValue}&ugroup=${usergroupValue}`),
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+                'Authorization': 'Bearer ' + this.dataStore.getJWT()
             },
             cancelToken: source.token
         }
@@ -52,14 +54,12 @@ class Auth extends React.Component {
                 flag: Flag.success,
                 resultSuccess: response.data
             });
-            this.redirect();
         }).catch((error) => {
             this.setState({
                 flag: Flag.failed,
                 resultFail: error.response
             });
         });;
-        
         this.setState({flag: Flag.waiting});
     }
 
@@ -75,7 +75,7 @@ class Auth extends React.Component {
         const axiosConfig = {
             url: 'api/login.php',
             method: 'post',
-            data: encodeURI('do=auth'),
+            data: encodeURI('do=auth&view=' + this.props.location.pathname),
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
                 'Authorization': 'Bearer ' + this.dataStore.getJWT()
@@ -88,21 +88,18 @@ class Auth extends React.Component {
                 flag: Flag.success,
                 resultSuccess: response.data
             });
-            this.redirect();
         }).catch((error) => {
             this.setState({
-                flag: Flag.nothing,
+                flag: Flag.denied,
                 resultFail: error.response
             });
+            this.redirect();
         });;
-        
         this.setState({flag: Flag.waiting});
     }
 
     componentDidMount() {
-        if (Object.prototype.hasOwnProperty.call(this.props.location.query, 'back') == false) {
-            this.authenticate();
-        }
+        this.authenticate();
     }
 
     componentWillUnmount() {
@@ -114,73 +111,97 @@ class Auth extends React.Component {
     validateInput() {
         this.setState({
             usernameValue: this.refs.username.value,
-            passwordValue: this.refs.password.value
+            passwordValue: this.refs.password.value,
+            usergroupValue: this.refs.usergroup.value
         })
     }
 
     handleSubmit(e) {
         e.preventDefault();
-        this.postData(this.state.usernameValue, this.state.passwordValue);
+        this.postData();
     }
 
     render() {
         const formDom = (
-            <form className="auth-block col-md-2 offset-md-3" onSubmit={this.handleSubmit}>
-                <h2 className="page-header">登陆</h2>
+            <form className="col-md-2" onSubmit={this.handleSubmit}>
                 <div className="form-group">
                     <input
                         type="text"
+                        className="form-control"
                         ref="username"
-                        className="input-sm form-control"
-                        placeholder="账号"
+                        placeholder="User name"
+                        value={this.state.usernameValue}
                         onChange={this.validateInput}
                     />
                 </div>
                 <div className="form-group">
                     <input
                         type="password"
+                        className="form-control"
                         ref="password"
-                        className="input-sm form-control"
-                        placeholder="密码"
+                        placeholder="Password"
+                        value={this.state.passwordValue}
                         onChange={this.validateInput}
                     />
                 </div>
                 <div className="form-group">
-                    <button type="submit" className="form-control btn btn-primary">提交</button>
+                    <select
+                        className="form-control"
+                        value={this.state.usergroupValue}
+                        ref="usergroup"
+                        onChange={this.validateInput}
+                    >
+                        <option value="user">user</option>
+                        <option value="superuser">superuser</option>
+                    </select>
                 </div>
+                <button type="submit" className="btn btn-primary">Create</button>
             </form>
         );
         let ret;
         switch (this.state.flag) {
             case Flag.success:
-                this.dataStore.setAccess(this.state.resultSuccess.access);
-                this.dataStore.setJWT(this.state.resultSuccess.jwt);
-                ret = (<Link to="/newUser">已验证</Link>);
+                let resDom = <div />;
+                if (this.state.resultSuccess.hasOwnProperty('message')) {
+                    resDom = (
+                        <div className="alert alert-success col-md-2 request-result">
+                            {this.state.resultSuccess.message}
+                        </div>
+                    );
+                }
+                ret = (
+                    <div>
+                        {formDom}
+                        {resDom}
+                    </div>
+                );
                 break;
             case Flag.failed:
                 ret = (
                     <div>
-                        <div>{formDom}</div>
-                        <div>{`验证失败 (╯‵□′)╯︵┻━┻ (${this.state.resultFail.status}: ${this.state.resultFail.statusText})`}</div>
+                        {formDom}
+                        <div className="alert alert-danger col-md-2 request-result">
+                            {this.state.resultFail.data.message}
+                        </div>
                     </div>
                 );
                 break;
             case Flag.waiting:
-                ret = (<div className="loader" />);
-                break;
-            case Flag.nothing:
                 ret = (
                     <div>
                         {formDom}
+                        <div className="loader" />
                     </div>
                 );
                 break;
+            case Flag.denied:
+                ret = (<div className="loader" />);
             default:
-                ret = (<div/>);
+                ret = (<div className="loader" />);
         }
         return ret;
     }
 
 }
 
-export default Auth;
+export default Account;

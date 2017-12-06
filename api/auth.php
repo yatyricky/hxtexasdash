@@ -26,20 +26,32 @@ function authenticate($name = "", $code = "") {
          */
         list($jwt) = sscanf($authHeader->toString(), 'Authorization: Bearer %s');
 
-        $resp['receivedJWT'] = $jwt;
-
         if ($jwt) {
             try {
                 $secretKey = base64_decode($config->jwtKey);
                 $decoded = JWT::decode($jwt, $secretKey, array('HS256'));
 
-                /*
-                 * Authorized
-                 * return protected asset
-                 */
+                // Authorized, JWT is valid
                 $resp['result'] = 'auth';
                 $resp['header'] = 'HTTP/1.0 200 OK';
 
+                // check permission for certain page
+                if ($_POST['view']) {
+                    $ugroup = $decoded->ugroup;
+                    $pagesAllowed = $config->PERMISSIONS->$ugroup->toArray();
+                    $fpagesAllowed = array_flip($pagesAllowed);
+                    if (isset($fpagesAllowed[$_POST['view']])) {
+                        // user has access to this page
+                        $resp['perm'] = 'granted';
+                        $resp['ugroup'] = $ugroup;
+                    } else {
+                        // deny requested page
+                        $resp['result'] = 'rejected';
+                        $resp['header'] = 'HTTP/1.0 401 Unauthorized';
+                    }
+                } else {
+                    $resp['perm'] = 'No page request';
+                }
             } catch (Exception $e) {
                 /*
                  * the token was not able to be decoded.
@@ -77,14 +89,16 @@ function authenticate($name = "", $code = "") {
                         "aud" => "http://something.else",
                         "iat" => $issuedAt,
                         "nbf" => $notBefore,
-                        'exp' => $expire            // Expire
+                        'exp' => $expire,            // Expire
+                        'ugroup' => $rows[0]['usergroup']
                     );
                     $secretKey = base64_decode($config->jwtKey);
 
                     $jwt = JWT::encode($token, $secretKey);
 
-                    $resp['result'] = 'success';
                     $resp['header'] = 'HTTP/1.0 200 OK';
+                    $resp['result'] = 'success';
+                    $resp['ugroup'] = $rows[0]['usergroup'];
                     $resp['jwt'] = $jwt;
                 } else {
                     $resp['result'] = 'Wrong password';
@@ -98,7 +112,7 @@ function authenticate($name = "", $code = "") {
             $resp['result'] = 'Bad query';
             $resp['header'] = 'HTTP/1.0 400 Bad Request';
         }
-        unset($link);
+        unset($dbhelper);
     }
 
     return $resp;
