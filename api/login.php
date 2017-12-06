@@ -66,7 +66,7 @@ if ($_POST['do'] == 'login') {
         $ret['access'] = getAccess($auth['ugroup']);
         $header = 'HTTP/1.0 200 OK';
     } else {
-        $ret['result'] = "rejected";
+        $ret['result'] = "Rejected: login denied";
         $header = 'HTTP/1.0 401 Unauthorized';
     }
 } else if ($_POST['do'] == 'auth') {
@@ -75,7 +75,7 @@ if ($_POST['do'] == 'login') {
         $ret['access'] = getAccess($auth['ugroup']);
         $header = 'HTTP/1.0 200 OK';
     } else {
-        $ret['result'] = "rejected";
+        $ret['result'] = "Rejected: authenticator returned false";
         $header = 'HTTP/1.0 401 Unauthorized';
     }
 } else {

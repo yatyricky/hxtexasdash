@@ -37,16 +37,20 @@ function authenticate($name = "", $code = "") {
 
                 // check permission for certain page
                 if ($_POST['view']) {
+                    $view = $_POST['view'];
+                    if (substr($view, 0, 1) != "/") {
+                        $view = "/".$view;
+                    }
                     $ugroup = $decoded->ugroup;
                     $pagesAllowed = $config->PERMISSIONS->$ugroup->toArray();
                     $fpagesAllowed = array_flip($pagesAllowed);
-                    if (isset($fpagesAllowed[$_POST['view']])) {
+                    if (isset($fpagesAllowed[$view])) {
                         // user has access to this page
                         $resp['perm'] = 'granted';
                         $resp['ugroup'] = $ugroup;
                     } else {
                         // deny requested page
-                        $resp['result'] = 'rejected';
+                        $resp['result'] = 'Rejected: no access to requested page';
                         $resp['header'] = 'HTTP/1.0 401 Unauthorized';
                     }
                 } else {
@@ -57,7 +61,7 @@ function authenticate($name = "", $code = "") {
                  * the token was not able to be decoded.
                  * this is likely because the signature was not able to be verified (tampered token)
                  */
-                $resp['result'] = 'reject';
+                $resp['result'] = 'Reject: invalid token';
                 $resp['header'] = 'HTTP/1.0 401 Unauthorized';
             }
         } else {

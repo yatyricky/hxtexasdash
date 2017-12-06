@@ -44,7 +44,7 @@ class QueryTable extends React.Component {
         const axiosConfig = {
             url: 'api/ops/queryTable.php',
             method: 'post',
-            data: encodeURI(`start=${dateStart}&end=${dateEnd}&rid=${roomId}&pid=${playerId}`),
+            data: encodeURI(`view=${this.props.location.pathname}&start=${dateStart}&end=${dateEnd}&rid=${roomId}&pid=${playerId}`),
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
                 'Authorization': 'Bearer ' + this.dataStore.getJWT()

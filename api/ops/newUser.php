@@ -32,7 +32,7 @@ if ($auth['result'] == 'auth') {
 
     $ret['data'] = $dnus;
 } else {
-    $ret['result'] = "rejected";
+    $ret['result'] = "Rejected: new user";
 }
 
 header($auth['header']);

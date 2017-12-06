@@ -39,7 +39,7 @@ class Session extends React.Component {
         const axiosConfig = {
             url: 'api/ops/session.php',
             method: 'post',
-            data: encodeURI(`start=${dateStart}&end=${dateEnd}`),
+            data: encodeURI(`view=${this.props.location.pathname}&start=${dateStart}&end=${dateEnd}`),
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
                 'Authorization': 'Bearer ' + this.dataStore.getJWT()

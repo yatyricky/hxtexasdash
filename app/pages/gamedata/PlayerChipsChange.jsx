@@ -43,7 +43,7 @@ class PlayerChipsChange extends React.Component {
         const axiosConfig = {
             url: 'api/ops/playerChipsChange.php',
             method: 'post',
-            data: encodeURI(`start=${dateStart}&end=${dateEnd}&pid=${playerId}`),
+            data: encodeURI(`view=${this.props.location.pathname}&start=${dateStart}&end=${dateEnd}&pid=${playerId}`),
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
                 'Authorization': 'Bearer ' + this.dataStore.getJWT()
