@@ -12,21 +12,17 @@ class QueryPlayer extends React.Component {
         super();
         this.dataStore = new DataStore();
         this.postData = this.postData.bind(this);
-        this.validateInput = this.validateInput.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
 
         this.lastRequest = null;
 
         this.state = {
-            "flag": Flag.nothing,
-            "inputPlayerIdValue": "",
-            "inputPlayerNameValue": ""
+            "flag": Flag.nothing
         }
     }
 
-    postData(e) {
-        e.preventDefault();
-
-        const {inputPlayerIdValue, inputPlayerNameValue} = this.state;
+    postData(params) {
+        const {inputPlayerIdValue, inputPlayerNameValue} = params;
 
         if (this.lastRequest != null) {
             this.lastRequest.cancel();
@@ -53,8 +49,6 @@ class QueryPlayer extends React.Component {
                 result: response.data
             });
         }).catch((error) => {
-            console.log(error);
-            
             this.setState({
                 flag: Flag.failed,
                 resultFailed: error.response
@@ -63,6 +57,15 @@ class QueryPlayer extends React.Component {
         });
 
         this.setState({flag: Flag.waiting});
+    }
+    
+    handleSubmit(e) {
+        e.preventDefault();
+        const form = e.target.elements;
+        this.postData({
+            inputPlayerIdValue: form.inputPlayerId.value,
+            inputPlayerNameValue: form.inputPlayerName.value
+        });
     }
 
     renderTable() {
@@ -100,46 +103,42 @@ class QueryPlayer extends React.Component {
         return ret;
     }
 
+    componentDidMount() {
+        this.postData({
+            inputPlayerIdValue: "",
+            inputPlayerNameValue: ""
+        });
+    }
+
     componentWillUnmount() {
         if (this.lastRequest != null) {
             this.lastRequest.cancel();
         }
     }
 
-    validateInput() {
-        this.setState({
-            inputPlayerIdValue: this.refs.inputPlayerId.value,
-            inputPlayerNameValue: this.refs.inputPlayerName.value
-        });
-    }
-
     render() {
         const headerDom = (
             <div>
                 <h1 className="page-header">查询玩家</h1>
-                <form className="form-row align-items-center" onSubmit={this.postData}>
+                <form className="form-row align-items-center" onSubmit={this.handleSubmit}>
                     <div className="col-auto">
                         <label htmlFor="inputPlayerId">输入玩家ID：</label>
                         <input
                             type="text"
-                            ref="inputPlayerId"
                             id="inputPlayerId"
-                            value={this.state.inputPlayerIdValue}
+                            name="inputPlayerId"
                             className="form-control mb-2 mb-sm-0"
                             placeholder="玩家ID"
-                            onChange={this.validateInput}
                         />
                     </div>
                     <div className="col-auto">
                         <label htmlFor="inputPlayerName">输入玩家昵称：</label>
                         <input
                             type="text"
-                            ref="inputPlayerName"
                             id="inputPlayerName"
-                            value={this.state.inputPlayerNameValue}
+                            name="inputPlayerName"
                             className="form-control mb-2 mb-sm-0"
                             placeholder="玩家昵称"
-                            onChange={this.validateInput}
                         />
                     </div>
                     <div className="col-auto">
