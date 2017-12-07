@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, hashHistory } from "react-router";
+import ReactHighcharts from 'react-highcharts';
 import axios from 'axios';
 import { CancelToken } from 'axios';
 
@@ -63,12 +64,20 @@ class Session extends React.Component {
         this.setState({flag: Flag.waiting});
     }
 
-    renderTable() {
-        const result = this.state.result.data.reverse();
+    renderChartTable() {
+        const result = this.state.result.data;
         const entries = [];
 
+        let categories = [];
+        let sessionData = [];
+        let lengthData = [];
+
         for (let i = 0, n = result.length; i < n; i++) {
-            entries.push(
+            categories.push(result[i].date);
+            sessionData.push(result[i].session);
+            lengthData.push(result[i].avgLength);
+
+            entries.unshift(
                 <tr key={i}>
                     <td className="font-small">{result[i].date}</td>
                     <td className="font-small">{result[i].session}</td>
@@ -78,58 +87,72 @@ class Session extends React.Component {
             );
         }
 
-        return (
-            <table className="table table-striped">
-                <thead>
-                    <tr>
-                        <th className="font-small">日期</th>
-                        <th className="font-small">启动次数</th>
-                        <th className="font-small">平均时长</th>
-                        <th className="font-small">总时长</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {entries}
-                </tbody>
-            </table>
-        );
-    }
+        const highConfig = {
+            chart: {
+                zoomType: 'x'
+            },
+            title: {
+                text: '启动次数与在线时长'
+            },
+            xAxis: [{
+                categories: categories
+            }],
+            yAxis: [{ // Primary yAxis
+                labels: {
+                    format: '{value}s'
+                },
+                title: {
+                    text: '在线时长'
+                },
+                opposite: true
+        
+            }, { // Secondary yAxis
+                title: {
+                    text: '启动次数'
+                },
+                labels: {
+                    format: '{value}'
+                }
+            }],
+            tooltip: {
+                shared: true
+            },
+            series: [{
+                name: '启动次数',
+                type: 'column',
+                yAxis: 1,
+                data: sessionData
+        
+            }, {
+                name: '平均时长',
+                type: 'spline',
+                data: lengthData,
+                tooltip: {
+                    valueSuffix: 's'
+                }
+            }]
+        };
 
-    renderResult(flag) {
-        let ret;
-        const inputFields = (
-            <div>
-                <span>选择起始日期：</span>
-                <input type="date" ref="inputDateStart" value={this.state.inputDateValueStart} className="input-sm" onChange={this.validateInput} />
-                <span>选择结束日期：</span>
-                <input type="date" ref="inputDateEnd" value={this.state.inputDateValueEnd} className="input-sm" onChange={this.validateInput} />
+        return (
+            <div className="request-result">
+                <ReactHighcharts config = {highConfig} />
+                <div className="table-responsive">
+                    <table className="table table-striped">
+                        <thead>
+                            <tr>
+                                <th className="font-small">日期</th>
+                                <th className="font-small">启动次数</th>
+                                <th className="font-small">平均时长</th>
+                                <th className="font-small">总时长</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {entries}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         );
-        switch (flag) {
-            case Flag.success:
-                ret = (
-                    <div>
-                        {inputFields}
-                        <div className="table-responsive">{this.renderTable()}</div>
-                    </div>
-                );
-                break;
-            case Flag.failed:
-                ret = (
-                    <div>
-                        <h3>载入失败 (╯‵□′)╯︵┻━┻</h3>
-                        <div>{`${this.state.result.status}: ${this.state.result.statusText}`}</div>
-                        <Link to="/auth">输入神秘代码</Link>
-                    </div>
-                );
-                break;
-            case Flag.waiting:
-                ret = (<div className="loader" />);
-                break;
-            default:
-                ret = (<div />);
-        }
-        return ret;
     }
 
     componentDidMount() {
@@ -161,12 +184,61 @@ class Session extends React.Component {
     }
 
     render() {
-        return (
+        let ret;
+        const headerDom = (
             <div>
                 <h1 className="page-header">启动次数</h1>
-                <div>{this.renderResult(this.state.flag)}</div>
+                <div className="form-row align-items-center">
+                    <div className="col-auto">
+                        <label htmlFor="inputDateStart">选择起始日期：</label>
+                        <input
+                            type="date"
+                            ref="inputDateStart"
+                            id="inputDateStart"
+                            value={this.state.inputDateValueStart}
+                            className="form-control mb-2 mb-sm-0"
+                            onChange={this.validateInput}
+                        />
+                    </div>
+                    <div className="col-auto">
+                        <label htmlFor="inputDateEnd">选择结束日期：</label>
+                        <input
+                            type="date"
+                            ref="inputDateEnd"
+                            id="inputDateEnd"
+                            value={this.state.inputDateValueEnd}
+                            className="form-control mb-2 mb-sm-0"
+                            onChange={this.validateInput}
+                        />
+                    </div>
+                </div>
             </div>
         );
+        switch (this.state.flag) {
+            case Flag.success:
+                ret = (
+                    <div>
+                        {headerDom}
+                        {this.renderChartTable()}
+                    </div>
+                );
+                break;
+            case Flag.failed:
+                ret = (
+                    <div>
+                        <h3>载入失败 (╯‵□′)╯︵┻━┻</h3>
+                        <div>{`${this.state.result.status}: ${this.state.result.statusText}`}</div>
+                        <Link to="/auth">输入神秘代码</Link>
+                    </div>
+                );
+                break;
+            case Flag.waiting:
+                ret = (<div className="loader" />);
+                break;
+            default:
+                ret = (<div />);
+        }
+        return ret;
     }
 
 }

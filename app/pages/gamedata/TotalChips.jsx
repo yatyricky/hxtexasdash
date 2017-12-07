@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, hashHistory } from "react-router";
+import ReactHighcharts from 'react-highcharts';
 import axios from 'axios';
 import { CancelToken } from 'axios';
 
@@ -63,12 +64,29 @@ class TotalChips extends React.Component {
         this.setState({flag: Flag.waiting});
     }
 
-    renderTable() {
-        const result = this.state.result.data.reverse();
+    renderChartTable() {
+        const result = this.state.result.data;
         const entries = [];
 
+        let categories = [];
+        let sumData = [];
+        let dmdData = [];
+        let gmData = [];
+        let buyItemData = [];
+        let rakeData = [];
+
+        console.log(result);
+        
+
         for (let i = 0, n = result.length; i < n; i++) {
-            entries.push(
+            categories.push(result[i].date);
+            sumData.push(parseFloat(result[i].sum));
+            dmdData.push(parseFloat(result[i].dmd));
+            gmData.push(parseFloat(result[i].gm));
+            buyItemData.push(parseFloat(result[i].buyItem));
+            rakeData.push(parseFloat(result[i].rake));
+
+            entries.unshift(
                 <tr key={i}>
                     <td className="font-small">{result[i].date}</td>
                     <td className="font-small">{result[i].sum}</td>
@@ -80,60 +98,101 @@ class TotalChips extends React.Component {
             );
         }
 
-        return (
-            <table className="table table-striped">
-                <thead>
-                    <tr>
-                        <th className="font-small">日期</th>
-                        <th className="font-small">总筹码</th>
-                        <th className="font-small">钻石兑换</th>
-                        <th className="font-small">GM变更</th>
-                        <th className="font-small">购买道具</th>
-                        <th className="font-small">抽水</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {entries}
-                </tbody>
-            </table>
-        );
-    }
+        const highConfig = {
+            "chart": {
+                "zoomType": 'x'
+            },
+            title: {
+                text: '库存变化'
+            },
+            xAxis: {
+                categories: categories
+            },
+            yAxis: [{
+                min: 0,
+                title: {
+                    text: '日变化量'
+                }
+            },{
+                min: 0,
+                title: {
+                    text: '库存总量'
+                },
+                opposite: true
+            }],
+            tooltip: {
+                formatter: function () {
+                    let sumField = "";
+                    if (this.series.options.stackName != "NO_VALUE") {
+                        sumField = this.series.options.stackName + '合计: ' + (this.point.stackTotal === undefined ? 0 : this.point.stackTotal);
+                    }
+                    return '<b>' + this.x + '</b><br/>' // Category name
+                        + '<span style="color:' + this.series.color + '">\u25CF</span>' // dot
+                        + this.series.name + ': ' + this.y + '<br/>' + sumField; // series and value and total
+                }
+            },
+        
+            plotOptions: {
+                column: {
+                    stacking: 'normal'
+                }
+            },
+        
+            series: [{
+                name: '钻石兑换',
+                type: 'column',
+                data: dmdData,
+                stack: 'production',
+                stackName: "产出"
+            }, {
+                name: 'GM变更',
+                type: 'column',
+                data: gmData,
+                stack: 'production',
+                stackName: "产出"
+            }, {
+                name: '购买道具',
+                type: 'column',
+                data: buyItemData,
+                stack: 'consumption',
+                stackName: "消耗"
+            }, {
+                name: '抽水',
+                type: 'column',
+                data: rakeData,
+                stack: 'consumption',
+                stackName: "消耗"
+            },{
+                name: '总筹码',
+                type: 'spline',
+                data: sumData,
+                yAxis: 1,
+                stackName: "NO_VALUE"
+            },]
+        };
 
-    renderResult(flag) {
-        let ret;
-        const inputFields = (
-            <div>
-                <span>选择起始日期：</span>
-                <input type="date" ref="inputDateStart" value={this.state.inputDateValueStart} className="input-sm" onChange={this.validateInput} />
-                <span>选择结束日期：</span>
-                <input type="date" ref="inputDateEnd" value={this.state.inputDateValueEnd} className="input-sm" onChange={this.validateInput} />
+        return (
+            <div className="request-result">
+                <ReactHighcharts config = {highConfig} />
+                <div className="table-responsive">
+                    <table className="table table-striped">
+                        <thead>
+                            <tr>
+                                <th className="font-small">日期</th>
+                                <th className="font-small">总筹码</th>
+                                <th className="font-small">钻石兑换</th>
+                                <th className="font-small">GM变更</th>
+                                <th className="font-small">购买道具</th>
+                                <th className="font-small">抽水</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {entries}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         );
-        switch (flag) {
-            case Flag.success:
-                ret = (
-                    <div>
-                        {inputFields}
-                        <div className="table-responsive">{this.renderTable()}</div>
-                    </div>
-                );
-                break;
-            case Flag.failed:
-                ret = (
-                    <div>
-                        <h3>载入失败 (╯‵□′)╯︵┻━┻</h3>
-                        <div>{`${this.state.result.status}: ${this.state.result.statusText}`}</div>
-                        <Link to="/auth">输入神秘代码</Link>
-                    </div>
-                );
-                break;
-            case Flag.waiting:
-                ret = (<div className="loader" />);
-                break;
-            default:
-                ret = (<div />);
-        }
-        return ret;
     }
 
     componentDidMount() {
@@ -165,12 +224,61 @@ class TotalChips extends React.Component {
     }
 
     render() {
-        return (
+        let ret;
+        const headerDom = (
             <div>
                 <h1 className="page-header">库存变化</h1>
-                <div>{this.renderResult(this.state.flag)}</div>
+                <div className="form-row align-items-center">
+                    <div className="col-auto">
+                        <label htmlFor="inputDateStart">选择起始日期：</label>
+                        <input
+                            type="date"
+                            ref="inputDateStart"
+                            id="inputDateStart"
+                            value={this.state.inputDateValueStart}
+                            className="form-control mb-2 mb-sm-0"
+                            onChange={this.validateInput}
+                        />
+                    </div>
+                    <div className="col-auto">
+                        <label htmlFor="inputDateEnd">选择结束日期：</label>
+                        <input
+                            type="date"
+                            ref="inputDateEnd"
+                            id="inputDateEnd"
+                            value={this.state.inputDateValueEnd}
+                            className="form-control mb-2 mb-sm-0"
+                            onChange={this.validateInput}
+                        />
+                    </div>
+                </div>
             </div>
         );
+        switch (this.state.flag) {
+            case Flag.success:
+                ret = (
+                    <div>
+                        {headerDom}
+                        {this.renderChartTable()}
+                    </div>
+                );
+                break;
+            case Flag.failed:
+                ret = (
+                    <div>
+                        <h3>载入失败 (╯‵□′)╯︵┻━┻</h3>
+                        <div>{`${this.state.result.status}: ${this.state.result.statusText}`}</div>
+                        <Link to="/auth">输入神秘代码</Link>
+                    </div>
+                );
+                break;
+            case Flag.waiting:
+                ret = (<div className="loader" />);
+                break;
+            default:
+                ret = (<div />);
+        }
+        return ret;
     }
 
 }

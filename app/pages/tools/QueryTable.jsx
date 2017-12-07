@@ -36,7 +36,7 @@ class QueryTable extends React.Component {
         if (this.lastRequest != null) {
             this.lastRequest.cancel();
         }
-
+        
         const CancelToken = axios.CancelToken;
         const source = CancelToken.source();
         this.lastRequest = source;
@@ -130,91 +130,37 @@ class QueryTable extends React.Component {
             );
         }
 
-        return (
-            <table className="table table-striped">
-                <thead>
-                    <tr>
-                        <th className="font-small">日期</th>
-                        <th className="font-small">房间ID</th>
-                        <th className="font-small">公共牌</th>
-                        <th className="font-small">庄位</th>
-                        <th className="font-small">小盲注额</th>
-                        <th className="font-small">结束轮次</th>
-                        <th className="font-small">玩家信息</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {entries}
-                </tbody>
-            </table>
-        );
+        let ret = (<div/>);
+        if (entries.length > 0) {
+            ret = (
+                <div className="request-result">
+                    <div>总共：{result.length}</div>
+                    <div className="table-responsive">
+                        <table className="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th className="font-small">日期</th>
+                                    <th className="font-small">房间ID</th>
+                                    <th className="font-small">公共牌</th>
+                                    <th className="font-small">庄位</th>
+                                    <th className="font-small">小盲注额</th>
+                                    <th className="font-small">结束轮次</th>
+                                    <th className="font-small">玩家信息</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {entries}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        return ret;
     }
 
     renderResult(flag) {
-        let ret;
-        const inputFields = (
-            <div>
-                <span>选择起始日期：</span>
-                <input
-                    type="date"
-                    ref="inputDateStart"
-                    value={this.state.inputDateValueStart}
-                    className="input-sm"
-                    onChange={this.validateInput}
-                />
-                <span>选择结束日期：</span>
-                <input
-                    type="date"
-                    ref="inputDateEnd"
-                    value={this.state.inputDateValueEnd}
-                    className="input-sm"
-                    onChange={this.validateInput}
-                />
-                <span>房间ID：</span>
-                <input
-                    type="text"
-                    ref="inputRoomId"
-                    value={this.state.inputRoomIdValue}
-                    className="input-sm"
-                    onChange={this.validateInput}
-                />
-                <span>玩家ID：</span>
-                <input
-                    type="text"
-                    ref="inputPlayerId"
-                    value={this.state.inputPlayerIdValue}
-                    className="input-sm"
-                    onChange={this.validateInput}
-                />
-                <button type="button" onClick={this.initQuery}>查询</button>
-            </div>
-        );
-        switch (flag) {
-            case Flag.success:
-                ret = (
-                    <div>
-                        {inputFields}
-                        <div>总共：{this.state.result.data.length}</div>
-                        <div className="table-responsive">{this.renderTable()}</div>
-                    </div>
-                );
-                break;
-            case Flag.failed:
-                ret = (
-                    <div>
-                        <h3>载入失败 (╯‵□′)╯︵┻━┻</h3>
-                        <div>{`${this.state.result.status}: ${this.state.result.statusText}`}</div>
-                        <Link to="/auth">输入神秘代码</Link>
-                    </div>
-                );
-                break;
-            case Flag.waiting:
-                ret = (<div className="loader" />);
-                break;
-            default:
-                ret = (<div />);
-        }
-        return ret;
     }
 
     componentDidMount() {
@@ -250,12 +196,87 @@ class QueryTable extends React.Component {
     }
 
     render() {
-        return (
+        let ret;
+        const headerDom = (
             <div>
                 <h1 className="page-header">查询牌桌</h1>
-                <div>{this.renderResult(this.state.flag)}</div>
+                <div className="form-row align-items-center">
+                    <div className="col-auto">
+                        <label htmlFor="inputDateStart">选择起始日期：</label>
+                        <input
+                            type="date"
+                            ref="inputDateStart"
+                            id="inputDateStart"
+                            value={this.state.inputDateValueStart}
+                            className="form-control mb-2 mb-sm-0"
+                            onChange={this.validateInput}
+                        />
+                    </div>
+                    <div className="col-auto">
+                        <label htmlFor="inputDateEnd">选择结束日期：</label>
+                        <input
+                            type="date"
+                            ref="inputDateEnd"
+                            id="inputDateEnd"
+                            value={this.state.inputDateValueEnd}
+                            className="form-control mb-2 mb-sm-0"
+                            onChange={this.validateInput}
+                        />
+                    </div>
+                    <div className="col-auto">
+                        <label htmlFor="inputRoomId">输入房间ID：</label>
+                        <input
+                            type="text"
+                            ref="inputRoomId"
+                            id="inputRoomId"
+                            value={this.state.inputRoomIdValue}
+                            className="form-control mb-2 mb-sm-0"
+                            onChange={this.validateInput}
+                        />
+                    </div>
+                    <div className="col-auto">
+                        <label htmlFor="inputPlayerId">输入玩家ID：</label>
+                        <input
+                            type="text"
+                            ref="inputPlayerId"
+                            id="inputPlayerId"
+                            value={this.state.inputPlayerIdValue}
+                            className="form-control mb-2 mb-sm-0"
+                            onChange={this.validateInput}
+                        />
+                    </div>
+                    <div className="col-auto">
+                        <label>&nbsp;</label>
+                        <button type="button" className="form-control btn btn-primary" onClick={this.initQuery}>查询</button>
+                    </div>
+                </div>
             </div>
         );
+        switch (this.state.flag) {
+            case Flag.success:
+                ret = (
+                    <div>
+                        {headerDom}
+                        {this.renderTable()}
+                    </div>
+                );
+                break;
+            case Flag.failed:
+                ret = (
+                    <div>
+                        <h3>载入失败 (╯‵□′)╯︵┻━┻</h3>
+                        <div>{`${this.state.result.status}: ${this.state.result.statusText}`}</div>
+                        <Link to="/auth">输入神秘代码</Link>
+                    </div>
+                );
+                break;
+            case Flag.waiting:
+                ret = (<div className="loader" />);
+                break;
+            default:
+                ret = (<div />);
+        }
+        return ret;
     }
 
 }
