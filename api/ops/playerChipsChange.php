@@ -7,49 +7,50 @@ header('Content-type: application/json');
 $ret = [];
 
 $auth = authenticate();
-// $auth['result'] = 'auth';
+$header = $auth['header'];
 if ($auth['result'] == 'auth') {
-    $ret['result'] = "auth";
+    if ($auth['view'] == '/playerChipsChange') {
+        $ret['result'] = "auth";
 
-    $dateStart = $_POST['start'];
-    $dateEnd = $_POST['end'];
-    $playerId = $_POST['pid'];
+        $dateStart = $_POST['start'];
+        $dateEnd = $_POST['end'];
+        $playerId = $_POST['pid'];
 
-    // $dateStart = '2017-11-01';
-    // $dateEnd = '2017-11-30';
-    // $playerId = '1000009';
+        if ($dateStart != '') {
+            $start = new DateTime($dateStart);
+            $end = new DateTime($dateEnd);
 
-    if ($dateStart != '') {
-        $start = new DateTime($dateStart);
-        $end = new DateTime($dateEnd);
+            $dt = $start;
 
-        $dt = $start;
-
-        // start the date loop
-        $allLogs = [];
-        while ($end >= $dt) {
-            $dailyLog = LogManager::fetchPropertyChange($dt->format('Y-m-d'));
-            foreach ($dailyLog as $k => $v) {
-                $tokens = explode('|', $v);
-                $id = $tokens[1];
-                if (!isset($allLogs[$id])) {
-                    $allLogs[$id] = [];
+            // start the date loop
+            $allLogs = [];
+            while ($end >= $dt) {
+                $dailyLog = LogManager::fetchPropertyChange($dt->format('Y-m-d'));
+                foreach ($dailyLog as $k => $v) {
+                    $tokens = explode('|', $v);
+                    $id = $tokens[1];
+                    if (!isset($allLogs[$id])) {
+                        $allLogs[$id] = [];
+                    }
+                    $allLogs[$id][] = $tokens;
                 }
-                $allLogs[$id][] = $tokens;
+                $dt->modify('+1 day');
             }
-            $dt->modify('+1 day');
-        }
-        if (isset($allLogs[$playerId])) {
-            $ret['data'] = $allLogs[$playerId];
+            if (isset($allLogs[$playerId])) {
+                $ret['data'] = $allLogs[$playerId];
+            } else {
+                $ret['data'] = [];
+            }
         } else {
             $ret['data'] = [];
         }
     } else {
-        $ret['data'] = [];
+        $header = 'HTTP/1.0 400 Bad Request';
+        $ret['result'] = "Original post data was altered.";
     }
 } else {
-    $ret['result'] = "rejected";
+    $ret['result'] = "Rejected: player chips change. Auth: ".$auth['result'];
 }
 
-header($auth['header']);
+header($header);
 echo json_encode($ret);

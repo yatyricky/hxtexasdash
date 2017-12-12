@@ -76,18 +76,18 @@ class PaidUser extends React.Component {
 
         for (let i = 0, n = result.length; i < n; i++) {
             config.categories.push(result[i].date);
-            rr1.data.push(parseFloat(result[i].revenue));
+            rr1.data.push(parseFloat(result[i].revenue) / 100.0);
 
             entries.unshift(
                 <tr key={i}>
                     <td className="font-small">{result[i].date}</td>
-                    <td className="font-small">{result[i].revenue}</td>
+                    <td className="font-small">{(result[i].revenue / 100.0).toFixed(2)}</td>
                     <td className="font-small">{result[i].pu}</td>
                     <td className="font-small">{(result[i].pr * 100).toFixed(2) + '%'}</td>
                     <td className="font-small">{result[i].newPaid}</td>
                     <td className="font-small">{(result[i].npr * 100).toFixed(2) + '%'}</td>
-                    <td className="font-small">{result[i].arpu}</td>
-                    <td className="font-small">{result[i].arppu}</td>
+                    <td className="font-small">{(result[i].arpu / 100.0).toFixed(2)}</td>
+                    <td className="font-small">{(result[i].arppu / 100.0).toFixed(2)}</td>
                 </tr>
             );
         }

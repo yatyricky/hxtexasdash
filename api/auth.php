@@ -46,6 +46,7 @@ function authenticate($name = "", $code = "") {
                     if (isset($fpagesAllowed[$view])) {
                         // user has access to this page
                         $resp['result'] = 'auth';
+                        $resp['view'] = $view;
                         $resp['header'] = 'HTTP/1.0 200 OK';
                         $resp['ugroup'] = $ugroup;
                     } else {

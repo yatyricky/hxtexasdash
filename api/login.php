@@ -30,6 +30,7 @@ function getAccess($ugroup) {
             "options" => []
         )
     );
+    if (isset($fpagesAllowed['/overview'])) {$menu['user']['options'][] = array("text" => "总览", "to" => "overview");}
     if (isset($fpagesAllowed['/newUser'])) {$menu['user']['options'][] = array("text" => "新增用户", "to" => "newUser");}
     if (isset($fpagesAllowed['/activeUser'])) {$menu['user']['options'][] = array("text" => "活跃用户", "to" => "activeUser");}
     if (isset($fpagesAllowed['/paidUser'])) {$menu['user']['options'][] = array("text" => "付费用户", "to" => "paidUser");}

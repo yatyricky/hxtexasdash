@@ -24,7 +24,7 @@ class Auth extends React.Component {
     }
 
     redirect() {
-        const redirect = Object.prototype.hasOwnProperty.call(this.props.location.query, 'back') ? this.props.location.query['back'] : "/newUser";
+        const redirect = Object.prototype.hasOwnProperty.call(this.props.location.query, 'back') ? this.props.location.query['back'] : "/overview";
         hashHistory.push(redirect);
     }
 
@@ -155,7 +155,7 @@ class Auth extends React.Component {
             case Flag.success:
                 this.dataStore.setAccess(this.state.resultSuccess.access);
                 this.dataStore.setJWT(this.state.resultSuccess.jwt);
-                ret = (<Link to="/newUser">已验证</Link>);
+                ret = (<Link to="/overview">已验证</Link>);
                 break;
             case Flag.failed:
                 ret = (

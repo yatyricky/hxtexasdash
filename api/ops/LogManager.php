@@ -70,6 +70,19 @@ class LogManager {
         return $arr;
     }
 
+    /**
+     * return:
+     *  {
+     *      'player_id_1': [total_value, payment_times],
+     *      'player_id_2': [total_value, payment_times],
+     *      'player_id_3': [total_value, payment_times],
+     *  }
+     * 
+     * stores:
+     *  player_id_1,total_value,payment_times
+     *  player_id_2,total_value,payment_times
+     *  player_id_3,total_value,payment_times
+     */
     public static function fetchPaidUsers($date) {
         $config = new Zend\Config\Config(include '../config.php');
         $cachePath = $config->rootDir.DIRECTORY_SEPARATOR.'payment'.DIRECTORY_SEPARATOR.$date.'_payment.txt';
@@ -79,7 +92,7 @@ class LogManager {
             $arr = [];
             foreach ($lines as $k => $v) {
                 $tokens = explode(',', $v);
-                $arr[$tokens[0]] = $tokens[1];
+                $arr[$tokens[0]] = [$tokens[1], $tokens[2]];
             }
         } else {
             $rawPath = $config->rootDir.DIRECTORY_SEPARATOR.'payment'.DIRECTORY_SEPARATOR.$date.'.txt';
@@ -89,14 +102,15 @@ class LogManager {
                 foreach ($lines as $k => $v) {
                     $tokens = explode('|', $v);
                     if (isset($arr[$tokens[1]]) == false) {
-                        $arr[$tokens[1]] = 0;
+                        $arr[$tokens[1]] = [0, 0];
                     }
-                    $arr[$tokens[1]] += $tokens[3];
+                    $arr[$tokens[1]][0] += $tokens[3];
+                    $arr[$tokens[1]][1] += 1;
                 }
 
                 $file = fopen($cachePath, 'w');
                 foreach ($arr as $k => $v) {
-                    fwrite($file, $k.','.$v.PHP_EOL);
+                    fwrite($file, $k.','.$v[0].','.$v[1].PHP_EOL);
                 }
                 fclose($file);
             } else {

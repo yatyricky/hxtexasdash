@@ -9,7 +9,7 @@ import DataStore from '../../DataStore.js';
 
 const moment = require('moment');
 
-class TotalChips extends React.Component {
+class Overview extends React.Component {
 
     constructor() {
         super();
@@ -20,7 +20,7 @@ class TotalChips extends React.Component {
 
         this.targetDateEnd = moment(new Date()).subtract(1, 'days');
         this.targetDateStart = moment(new Date()).subtract(7, 'days');
-
+        
         this.state = {
             "flag": Flag.nothing,
             "inputDateValueStart": this.targetDateStart.format('YYYY-MM-DD'),
@@ -38,7 +38,7 @@ class TotalChips extends React.Component {
         this.lastRequest = source;
 
         const axiosConfig = {
-            url: 'api/ops/totalChips.php',
+            url: 'api/ops/overview.php',
             method: 'post',
             data: encodeURI(`view=${this.props.location.pathname}&start=${dateStart}&end=${dateEnd}`),
             headers: {
@@ -67,105 +67,58 @@ class TotalChips extends React.Component {
     renderChartTable() {
         const result = this.state.result.data;
         const entries = [];
-
-        let categories = [];
-        let sumData = [];
-        let dmdData = [];
-        let gmData = [];
-        let buyItemData = [];
-        let rakeData = [];
+        const config = {categories: [], data: []}; // highcharts config
+        let rr1 = {
+            "name": "新用户",
+            "data": []
+        };
 
         for (let i = 0, n = result.length; i < n; i++) {
-            categories.push(result[i].date);
-            sumData.push(parseFloat(result[i].sum));
-            dmdData.push(parseFloat(result[i].dmd));
-            gmData.push(parseFloat(result[i].gm));
-            buyItemData.push(parseFloat(result[i].buyItem));
-            rakeData.push(parseFloat(result[i].rake));
-
+            config.categories.push(result[i].date);
+            rr1.data.push(parseFloat(result[i].dnu));
+            
             entries.unshift(
                 <tr key={i}>
                     <td className="font-small">{result[i].date}</td>
-                    <td className="font-small">{result[i].sum}</td>
-                    <td className="font-small">{result[i].dmd}</td>
-                    <td className="font-small">{result[i].gm}</td>
-                    <td className="font-small">{result[i].buyItem}</td>
-                    <td className="font-small">{result[i].rake}</td>
+                    <td className="font-small">{result[i].dau}</td>
+                    <td className="font-small">{result[i].dnu}</td>
+                    <td className="font-small">{result[i].retentions[0] == 0.0 ? "-" : (result[i].retentions[0] * 100).toFixed(2) + '%'}</td>
+                    <td className="font-small">{result[i].retentions[2] == 0.0 ? "-" : (result[i].retentions[2] * 100).toFixed(2) + '%'}</td>
+                    <td className="font-small">{result[i].retentions[6] == 0.0 ? "-" : (result[i].retentions[6] * 100).toFixed(2) + '%'}</td>
+                    <td className="font-small">{result[i].retentions[14] == 0.0 ? "-" : (result[i].retentions[14] * 100).toFixed(2) + '%'}</td>
+                    <td className="font-small">{result[i].retentions[29] == 0.0 ? "-" : (result[i].retentions[29] * 100).toFixed(2) + '%'}</td>
+                    <td className="font-small">{result[i].pu}</td>
+                    <td className="font-small">{result[i].pTimes}</td>
+                    <td className="font-small">{(result[i].pr * 100.0).toFixed(2) + '%'}</td>
+                    <td className="font-small">{(result[i].revenue / 100.0).toFixed(2)}</td>
+                    <td className="font-small">{(result[i].arppu / 100.0).toFixed(2)}</td>
+                    <td className="font-small">{(result[i].narpu / 100.0).toFixed(2)}</td>
+                    <td className="font-small">{(result[i].arpu / 100.0).toFixed(2)}</td>
+                    <td className="font-small">{result[i].newPaid}</td>
+                    <td className="font-small">{(result[i].newRev / 100.0).toFixed(2)}</td>
+                    <td className="font-small">{(result[i].npr * 100.0).toFixed(2) + '%'}</td>
                 </tr>
             );
         }
-
+        config.data.push(rr1);
+        
         const highConfig = {
             "chart": {
                 "zoomType": 'x'
             },
-            title: {
-                text: '库存变化'
+            "title": {
+                "text": "新用户"
             },
-            xAxis: {
-                categories: categories
+            "xAxis": {
+                "categories": config.categories
             },
-            yAxis: [{
-                min: 0,
-                title: {
-                    text: '日变化量'
-                }
-            },{
-                min: 0,
-                title: {
-                    text: '库存总量'
-                },
-                opposite: true
-            }],
-            tooltip: {
-                formatter: function () {
-                    let sumField = "";
-                    if (this.series.options.stackName != "NO_VALUE") {
-                        sumField = this.series.options.stackName + '合计: ' + (this.point.stackTotal === undefined ? 0 : this.point.stackTotal);
-                    }
-                    return '<b>' + this.x + '</b><br/>' // Category name
-                        + '<span style="color:' + this.series.color + '">\u25CF</span>' // dot
-                        + this.series.name + ': ' + this.y + '<br/>' + sumField; // series and value and total
+            "yAxis": {
+                "title": {
+                    "text": "新用户"
                 }
             },
-        
-            plotOptions: {
-                column: {
-                    stacking: 'normal'
-                }
-            },
-        
-            series: [{
-                name: '钻石兑换',
-                type: 'column',
-                data: dmdData,
-                stack: 'production',
-                stackName: "产出"
-            }, {
-                name: 'GM变更',
-                type: 'column',
-                data: gmData,
-                stack: 'production',
-                stackName: "产出"
-            }, {
-                name: '购买道具',
-                type: 'column',
-                data: buyItemData,
-                stack: 'consumption',
-                stackName: "消耗"
-            }, {
-                name: '抽水',
-                type: 'column',
-                data: rakeData,
-                stack: 'consumption',
-                stackName: "消耗"
-            },{
-                name: '总筹码',
-                type: 'spline',
-                data: sumData,
-                yAxis: 1,
-                stackName: "NO_VALUE"
-            },]
+            "series": config.data
+
         };
 
         return (
@@ -176,11 +129,23 @@ class TotalChips extends React.Component {
                         <thead>
                             <tr>
                                 <th className="font-small">日期</th>
-                                <th className="font-small">总筹码</th>
-                                <th className="font-small">钻石兑换</th>
-                                <th className="font-small">GM变更</th>
-                                <th className="font-small">购买道具</th>
-                                <th className="font-small">抽水</th>
+                                <th className="font-small">活跃</th>
+                                <th className="font-small">新账号</th>
+                                <th className="font-small">次留</th>
+                                <th className="font-small">+3</th>
+                                <th className="font-small">+7</th>
+                                <th className="font-small">+15</th>
+                                <th className="font-small">+30</th>
+                                <th className="font-small">付费账号数</th>
+                                <th className="font-small">付费次数</th>
+                                <th className="font-small">日活付费率</th>
+                                <th className="font-small">付费金额</th>
+                                <th className="font-small">ARPPU</th>
+                                <th className="font-small">新增ARPU</th>
+                                <th className="font-small">ARPU</th>
+                                <th className="font-small">新增付费账号</th>
+                                <th className="font-small">新增付费金额</th>
+                                <th className="font-small">新增付费率</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -224,7 +189,7 @@ class TotalChips extends React.Component {
         let ret;
         const headerDom = (
             <div>
-                <h1 className="page-header">库存变化</h1>
+                <h1 className="page-header">总览</h1>
                 <div className="form-row align-items-center">
                     <div className="col-auto">
                         <label htmlFor="inputDateStart">选择起始日期：</label>
@@ -280,4 +245,4 @@ class TotalChips extends React.Component {
 
 }
 
-export default TotalChips;
+export default Overview;
