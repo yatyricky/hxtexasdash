@@ -67,15 +67,18 @@ class Overview extends React.Component {
     renderChartTable() {
         const result = this.state.result.data;
         const entries = [];
-        const config = {categories: [], data: []}; // highcharts config
-        let rr1 = {
-            "name": "新用户",
-            "data": []
-        };
+        const categories = [];
+        const oldUser = [];
+        const newUser = [];
+        const oldUserPay = [];
+        const newUserPay = [];
 
         for (let i = 0, n = result.length; i < n; i++) {
-            config.categories.push(result[i].date);
-            rr1.data.push(parseFloat(result[i].dnu));
+            categories.push(result[i].date);
+            oldUser.push(parseInt(result[i].dau) - parseInt(result[i].dnu));
+            newUser.push(result[i].dnu);
+            oldUserPay.push(parseFloat(result[i].revenue) - parseFloat(result[i].newRev));
+            newUserPay.push(result[i].newRev);
             
             entries.unshift(
                 <tr key={i}>
@@ -100,25 +103,63 @@ class Overview extends React.Component {
                 </tr>
             );
         }
-        config.data.push(rr1);
         
         const highConfig = {
-            "chart": {
-                "zoomType": 'x'
+            chart: {
+                zoomType: 'x'
             },
-            "title": {
-                "text": "新用户"
+            title: {
+                text: '新老用户数量与付费'
             },
-            "xAxis": {
-                "categories": config.categories
+            xAxis: {
+                categories: categories
             },
-            "yAxis": {
-                "title": {
-                    "text": "新用户"
+            yAxis: [{
+                title: {
+                    text: '用户'
+                },
+                min: 0
+            }, {
+                title: {
+                    text: '付费'
+                },
+                opposite: true,
+                min: 0
+            }],
+            tooltip: {
+                shared: true
+            },
+            plotOptions: {
+                area: {
+                    stacking: 'normal'
+                },
+                column: {
+                        stacking: 'normal'
                 }
             },
-            "series": config.data
-
+            series: [{
+                name: '老用户',
+                type: 'column',
+                maxPointWidth: 10,
+                data: oldUser
+            }, {
+                name: '新用户',
+                type: 'column',
+                maxPointWidth: 10,
+                data: newUser
+            }, {
+                name: '老用户付费',
+                type: 'area',
+                fillOpacity: 0.3,
+                yAxis: 1,
+                data: oldUserPay
+            }, {
+                name: '新用户付费',
+                type: 'area',
+                fillOpacity: 0.3,
+                yAxis: 1,
+                data: newUserPay
+            }]
         };
 
         return (
