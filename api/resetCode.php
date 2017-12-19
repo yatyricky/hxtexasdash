@@ -8,20 +8,18 @@ $auth = authenticate();
 $header = $auth['header'];
 if ($auth['result'] == 'auth') {
     // Authenticated
-    $uname = addslashes($_POST['name']);
-    $upass = password_hash(addslashes($_POST['code']), PASSWORD_DEFAULT);
-    $ugroup = addslashes($_POST['ugroup']);
-    $uchannel = addslashes($_POST['uchannel']);
+    $id = intval($_POST['id']);
+    $pass = '$2y$10$bw46GWq53zuieeseDu6Oeuxk.CrL8kX6LeLJFSnYWw6hpVnzUchJu';
     
     $dbhelper = new DBHelper();
     $link = $dbhelper->conn;
-    $query = "INSERT INTO `user` (`id`, `username`, `encpass`, `usergroup`, `channels`) VALUES (NULL, '$uname', '$upass', '$ugroup', '$uchannel')";
+    $query = "UPDATE `user` SET `encpass` = '$pass' WHERE `user`.`id` = $id";
     $result = mysqli_query($link, $query);
     $affected = mysqli_affected_rows($link);
-    if ($affected > 0) {
-        $ret['message'] = "Successfully inserted $affected record";
+    if ($affected == 1) {
+        $ret['message'] = "Successfully updated $affected record";
     } else {
-        $ret['message'] = 'User already exists';
+        $ret['message'] = 'Nothing has changed or invalid user id';
         $header = 'HTTP/1.0 400 Bad Request';
     }
     unset($dbhelper);

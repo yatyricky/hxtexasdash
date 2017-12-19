@@ -58,7 +58,7 @@ class Auth extends React.Component {
                 flag: Flag.failed,
                 resultFail: error.response
             });
-        });;
+        });
         
         this.setState({flag: Flag.waiting});
     }
@@ -94,7 +94,7 @@ class Auth extends React.Component {
                 flag: Flag.nothing,
                 resultFail: error.response
             });
-        });;
+        });
         
         this.setState({flag: Flag.waiting});
     }
