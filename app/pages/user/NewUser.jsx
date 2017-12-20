@@ -16,15 +16,28 @@ class NewUser extends React.Component {
         this.dataStore = new DataStore();
         this.validateInput = this.validateInput.bind(this);
         this.postData = this.postData.bind(this);
+        this.applyChannelSelector = this.applyChannelSelector.bind(this);
+        this.applyversionSelector = this.applyversionSelector.bind(this);
         this.lastRequest = null;
 
         this.targetDateEnd = moment(new Date()).subtract(1, 'days');
         this.targetDateStart = moment(new Date()).subtract(7, 'days');
+
+        this.channelSelectorOptionsDom = [];
+        this.channelSelectorOptionsDom.push(
+            <option key={0} value={"all"}>全部渠道</option>
+        );
+        this.versionSelectorOptionsDom = [];
+        this.versionSelectorOptionsDom.push(
+            <option key={0} value={"all"}>全部版本</option>
+        );
         
         this.state = {
-            "flag": Flag.nothing,
-            "inputDateValueStart": this.targetDateStart.format('YYYY-MM-DD'),
-            "inputDateValueEnd": this.targetDateEnd.format('YYYY-MM-DD')
+            flag: Flag.nothing,
+            inputDateValueStart: this.targetDateStart.format('YYYY-MM-DD'),
+            inputDateValueEnd: this.targetDateEnd.format('YYYY-MM-DD'),
+            channelSelector: "all",
+            versionSelector: "all"
         }
     }
 
@@ -65,43 +78,89 @@ class NewUser extends React.Component {
     }
 
     renderChartTable() {
-        const result = this.state.result.data;
+        // Get channels, versions, device ids
+        const {data, channels, versions} = this.state.result;
         const entries = [];
         const config = {categories: [], data: []}; // highcharts config
-        let rr1 = {
-            "name": "新用户",
-            "data": []
+        let dnid = {
+            name: "新账号",
+            data: []
         };
+        let dndid = {
+            name: "新设备",
+            data: []
+        };
+        
+        for (let i = 0, n = data.length; i < n; i++) {
+            config.categories.push(data[i].date);
+            const allUsers = data[i].data;
+            const userIds = Object.keys(allUsers);
+            // apply filter
+            // find device ids
+            const devices = [];
+            let account = 0;
+            for (let j = 0, m = userIds.length; j < m; j++) {
+                const item = allUsers[userIds[j]];
+                if ((item.channel == this.state.channelSelector || this.state.channelSelector == "all")
+                    && (item.version == this.state.versionSelector || this.state.versionSelector == "all")) {
+                    if (devices.indexOf(item.deviceId) == -1) {
+                        devices.push(item.deviceId);
+                    }
+                    account += 1;
+                }
+            }
 
-        for (let i = 0, n = result.length; i < n; i++) {
-            config.categories.push(result[i].date);
-            rr1.data.push(parseFloat(result[i].dnu));
-            
+            // chart
+            dnid.data.push(account);
+            dndid.data.push(devices.length);
+            // table
             entries.unshift(
                 <tr key={i}>
-                    <td className="font-small">{result[i].date}</td>
-                    <td className="font-small">{result[i].dnu}</td>
+                    <td className="font-small">{data[i].date}</td>
+                    <td className="font-small">{account}</td>
+                    <td className="font-small">{devices.length}</td>
                 </tr>
             );
         }
-        config.data.push(rr1);
+
+        // update channel selector
+        this.channelSelectorOptionsDom.splice(1);
+        const channelsKeys = Object.keys(channels);
+        for (let i = 0; i < channelsKeys.length; i ++) {
+            this.channelSelectorOptionsDom.push(
+                <option key={i+1} value={channelsKeys[i]}>{channels[channelsKeys[i]]}</option>
+            );
+        }
+        // update version selector
+        this.versionSelectorOptionsDom.splice(1);
+        for (let i = 0; i < versions.length; i ++) {
+            this.versionSelectorOptionsDom.push(
+                <option key={i+1} value={versions[i]}>{versions[i]}</option>
+            );
+        }
+
+        config.data.push(dnid);
+        config.data.push(dndid);
         
         const highConfig = {
-            "chart": {
-                "zoomType": 'x'
+            chart: {
+                zoomType: 'x'
             },
-            "title": {
-                "text": "新用户"
+            title: {
+                text: "新用户"
             },
-            "xAxis": {
-                "categories": config.categories
+            xAxis: {
+                categories: config.categories
             },
-            "yAxis": {
-                "title": {
-                    "text": "新用户"
+            tooltip: {
+                shared: true
+            },
+            yAxis: {
+                title: {
+                    text: "新账号"
                 }
             },
-            "series": config.data
+            series: config.data
 
         };
 
@@ -113,7 +172,8 @@ class NewUser extends React.Component {
                         <thead>
                             <tr>
                                 <th className="font-small">日期</th>
-                                <th className="font-small">激活</th>
+                                <th className="font-small">激活账号</th>
+                                <th className="font-small">激活设备</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -153,6 +213,14 @@ class NewUser extends React.Component {
         this.postData(inputDateStart.format('YYYYMMDD'), inputDateEnd.format('YYYYMMDD'));
     }
 
+    applyChannelSelector() {
+        this.setState({channelSelector: this.refs.channelSelector.value});
+    }
+
+    applyversionSelector() {
+        this.setState({versionSelector: this.refs.versionSelector.value});
+    }
+
     render() {
         let ret;
         const headerDom = (
@@ -180,6 +248,30 @@ class NewUser extends React.Component {
                             className="form-control mb-2 mb-sm-0"
                             onChange={this.validateInput}
                         />
+                    </div>
+                    <div className="col-auto">
+                        <label htmlFor="channelSelector">选择渠道：</label>
+                        <select
+                            className="form-control mb-2 mb-sm-0"
+                            id="channelSelector"
+                            ref="channelSelector"
+                            value={this.state.channelSelector}
+                            onChange={this.applyChannelSelector}
+                        >
+                            {this.channelSelectorOptionsDom}
+                        </select>
+                    </div>
+                    <div className="col-auto">
+                        <label htmlFor="versionSelector">选择版本：</label>
+                        <select
+                            className="form-control mb-2 mb-sm-0"
+                            id="versionSelector"
+                            ref="versionSelector"
+                            value={this.state.versionSelector}
+                            onChange={this.applyversionSelector}
+                        >
+                            {this.versionSelectorOptionsDom}
+                        </select>
                     </div>
                 </div>
             </div>

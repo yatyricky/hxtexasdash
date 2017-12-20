@@ -16,4 +16,15 @@ class DBHelper {
     function __destruct() {
         mysqli_close($this->conn);
     }
+
+    public function retrieveChannels($uid) {
+        $query = "SELECT `channels` FROM `user` WHERE `id`=$uid";
+        $result = mysqli_query($this->conn, $query);
+        $rows = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        $ret = [];
+        if (count($rows) == 1) {
+            $ret = explode(",", $rows[0]['channels']);
+        }
+        return $ret;
+    }
 }

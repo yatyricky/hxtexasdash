@@ -41,6 +41,7 @@ function authenticate($name = "", $code = "") {
                         $view = "/".$view;
                     }
                     $ugroup = $decoded->ugroup;
+                    $uid = $decoded->uid;
                     $pagesAllowed = $config->PERMISSIONS->$ugroup->toArray();
                     $fpagesAllowed = array_flip($pagesAllowed);
                     if (isset($fpagesAllowed[$view])) {
@@ -49,6 +50,7 @@ function authenticate($name = "", $code = "") {
                         $resp['view'] = $view;
                         $resp['header'] = 'HTTP/1.0 200 OK';
                         $resp['ugroup'] = $ugroup;
+                        $resp['uid'] = $uid;
                     } else {
                         // deny requested page
                         $resp['result'] = 'Rejected: no access to requested page';
@@ -96,7 +98,8 @@ function authenticate($name = "", $code = "") {
                         "iat" => $issuedAt,
                         "nbf" => $notBefore,
                         'exp' => $expire,            // Expire
-                        'ugroup' => $rows[0]['usergroup']
+                        'ugroup' => $rows[0]['usergroup'],
+                        'uid' => $rows[0]['id']
                     );
                     $secretKey = base64_decode($config->jwtKey);
 

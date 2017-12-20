@@ -7,6 +7,16 @@ class LogManager {
         return $text;
     }
 
+    public static function mapChannelConfig($channels) {
+        $config = new Zend\Config\Config(include '../config.php');
+        $chnconf = $config->CHANNELS->toArray();
+        $ret = array_flip($channels);
+        foreach ($ret as $k => &$v) {
+            $v = $chnconf[$k];
+        }
+        return $ret;
+    }
+
     public static function fetchNewUserIds($date) {
         $config = new Zend\Config\Config(include '../config.php');
         $fPath = $config->rootDir.DIRECTORY_SEPARATOR.'register'.DIRECTORY_SEPARATOR.$date.'_accountID.txt';
@@ -28,6 +38,63 @@ class LogManager {
             } else {
                 $arr = [];
             }
+        }
+        return $arr;
+    }
+
+    /**
+     * $t is short for $tokens
+     *  0. timestamp(UTC+8)
+     *  1. player_id
+     *  2. player_name
+     *  3. game_version
+     *  4. channel_name
+     *  5. device_id(IMEI, UDID)
+     *  6. os_version(6.0, 10.1.1)
+     *  7. network_type(Wi-Fi, 4G)
+     *  8. ip_address
+     * 
+     * return: key = player_id, value = filters = device_id, channel, version, etc...
+     *  {
+     *      '1000001': {
+     *          deviceId: '423412341',
+     *          channel: 'dev_test_1',
+     *          version: 'v0.0.1.0001'
+     *      },
+     *      '1000002': {
+     *          deviceId: '234234332',
+     *          channel: 'dev_test_2',
+     *          version: 'v0.0.1.0001'
+     *      },
+     *      '1000003': {
+     *          deviceId: '123423433',
+     *          channel: 'dev_test_1',
+     *          version: 'v0.0.1.0001'
+     *      },
+     *      ...
+     *  }
+     *  ** NO FILE CACHE **
+     */
+    public static function fetchRegisterParsed($date, $channels) {
+        $config = new Zend\Config\Config(include '../config.php');
+        $rawPath = $config->rootDir.DIRECTORY_SEPARATOR.'register'.DIRECTORY_SEPARATOR.$date.'.txt';
+        if (file_exists($rawPath)) {
+            $arr = [];
+            $lines = file($rawPath, FILE_IGNORE_NEW_LINES);
+            $channelsFlip = array_flip($channels);
+            foreach ($lines as $k => $v) {
+                $t = explode('|', trim($v));
+                // channel must match
+                if (isset($channelsFlip[$t[4]])) {
+                    $arr[$t[1]] = array(
+                        'deviceId' => $t[5],
+                        'channel' => $t[4],
+                        'version' => $t[3]
+                    );
+                }
+            }
+        } else {
+            $arr = [];
         }
         return $arr;
     }

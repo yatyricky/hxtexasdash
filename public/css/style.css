@@ -64,12 +64,6 @@ input[type="checkbox"]:not(:checked).channel-checkbox + .channel-label {
   cursor: pointer;
 }
 
-.channel-label
-
-li:first-of-type + li {
-  color: red;
-}
-
 @media (max-width: 830px) {
   .card-columns {
       -webkit-column-count: 1;
