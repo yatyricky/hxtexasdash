@@ -3,5 +3,6 @@ export const Flag = {
     "waiting": 101,
     "success": 200,
     "failed": 300,
-    "denied": 301
+    "denied": 301,
+    "logUseIsNewDevice": true
 };

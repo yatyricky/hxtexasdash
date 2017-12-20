@@ -64,6 +64,22 @@ input[type="checkbox"]:not(:checked).channel-checkbox + .channel-label {
   cursor: pointer;
 }
 
+input[type="radio"].hx-radios {
+  display: none;
+}
+
+input[type="radio"]:checked.hx-radios + .channel-label {
+  background-color: #007bff;
+}
+
+input[type="radio"]:not(:checked).hx-radios + .channel-label {
+  background-color: #6c757d;
+}
+
+.nomargin-label {
+  margin-bottom: 0;
+}
+
 @media (max-width: 830px) {
   .card-columns {
       -webkit-column-count: 1;

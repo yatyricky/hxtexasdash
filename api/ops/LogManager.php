@@ -53,21 +53,13 @@ class LogManager {
      *  6. os_version(6.0, 10.1.1)
      *  7. network_type(Wi-Fi, 4G)
      *  8. ip_address
+     *  9. is_new_device
      * 
      * return: key = player_id, value = filters = device_id, channel, version, etc...
      *  {
      *      '1000001': {
+     *          timeStamp: '2017-11-05 11:23:34'
      *          deviceId: '423412341',
-     *          channel: 'dev_test_1',
-     *          version: 'v0.0.1.0001'
-     *      },
-     *      '1000002': {
-     *          deviceId: '234234332',
-     *          channel: 'dev_test_2',
-     *          version: 'v0.0.1.0001'
-     *      },
-     *      '1000003': {
-     *          deviceId: '123423433',
      *          channel: 'dev_test_1',
      *          version: 'v0.0.1.0001'
      *      },
@@ -87,9 +79,11 @@ class LogManager {
                 // channel must match
                 if (isset($channelsFlip[$t[4]])) {
                     $arr[$t[1]] = array(
+                        'timeStamp' => $t[0],
                         'deviceId' => $t[5],
                         'channel' => $t[4],
-                        'version' => $t[3]
+                        'version' => $t[3],
+                        'newDevice' => $t[9]
                     );
                 }
             }
