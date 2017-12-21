@@ -18,32 +18,15 @@ if ($auth['result'] == 'auth') {
         $dbhelper = new DBHelper();
         $channels = $dbhelper->retrieveChannels($auth['uid']);
         
-        $dateStart = $_POST['start'];
-        $dateEnd = $_POST['end'];
-
-        $start = new DateTime($dateStart);
-        $end = new DateTime($dateEnd);
-        $dt = $start;
-
-        $dnus = [];
+        $bulk = LogManager::fetchRegisterInPeriodFiltered($_POST['start'], $_POST['end'], $channels);
         $sumChannels = [];
         $sumVersions = [];
-
-        while ($end >= $dt) {
-            $obj = [];
-            $obj['date'] = $dt->format('Y-m-d');
-            $obj['data'] = LogManager::fetchRegisterParsed($obj['date'], $channels);
-            foreach ($obj['data'] as $k => $v) {
-                $sumChannels[$v['channel']] = 1;
-                $sumVersions[$v['version']] = 1;
-            }
-
-            $dnus[] = $obj;
-
-            $dt->modify('+1 day');
+        foreach ($bulk as $k => $v) {
+            $sumChannels[$v['channel']] = 1;
+            $sumVersions[$v['version']] = 1;
         }
 
-        $ret['data'] = $dnus;
+        $ret['data'] = $bulk;
         $ret['channels'] = LogManager::mapChannelConfig(array_keys($sumChannels));
         $ret['versions'] = array_keys($sumVersions);
 

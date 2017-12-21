@@ -55,42 +55,51 @@ class LogManager {
      *  8. ip_address
      *  9. is_new_device
      * 
-     * return: key = player_id, value = filters = device_id, channel, version, etc...
-     *  {
-     *      '1000001': {
-     *          timeStamp: '2017-11-05 11:23:34'
-     *          deviceId: '423412341',
-     *          channel: 'dev_test_1',
+     * return: array
+     *  [
+     *      {
+     *          timeStamp: '2017-11-05 11:23:34',
      *          version: 'v0.0.1.0001'
+     *          channel: 'dev_test_1',
+     *          deviceId: '423412341',
+     *          newDevice: 1
      *      },
      *      ...
-     *  }
+     *  ]
      *  ** NO FILE CACHE **
+     * 
      */
-    public static function fetchRegisterParsed($date, $channels) {
+    public static function fetchRegisterInPeriodFiltered($dateStart, $dateEnd, $channels) {
         $config = new Zend\Config\Config(include '../config.php');
-        $rawPath = $config->rootDir.DIRECTORY_SEPARATOR.'register'.DIRECTORY_SEPARATOR.$date.'.txt';
-        if (file_exists($rawPath)) {
-            $arr = [];
-            $lines = file($rawPath, FILE_IGNORE_NEW_LINES);
-            $channelsFlip = array_flip($channels);
-            foreach ($lines as $k => $v) {
-                $t = explode('|', trim($v));
-                // channel must match
-                if (isset($channelsFlip[$t[4]])) {
-                    $arr[$t[1]] = array(
-                        'timeStamp' => $t[0],
-                        'deviceId' => $t[5],
-                        'channel' => $t[4],
-                        'version' => $t[3],
-                        'newDevice' => $t[9]
-                    );
+
+        $start = new DateTime($dateStart);
+        $end = new DateTime($dateEnd);
+        $channelsFlip = array_flip($channels);
+        $ret = [];
+        while ($end >= $start) {
+            $dayStr = $start->format('Y-m-d');
+
+            $rawPath = $config->rootDir.DIRECTORY_SEPARATOR.'register'.DIRECTORY_SEPARATOR.$dayStr.'.txt';
+            if (file_exists($rawPath)) {
+                $lines = file($rawPath, FILE_IGNORE_NEW_LINES);
+                foreach ($lines as $k => $v) {
+                    $t = explode('|', trim($v));
+                    // channel must match
+                    if (isset($channelsFlip[$t[4]])) {
+                        $ret[] = array(
+                            'timeStamp' => $t[0],
+                            'userId' => $t[1],
+                            'version' => $t[3],
+                            'channel' => $t[4],
+                            'deviceId' => $t[5],
+                            'newDevice' => $t[9]
+                        );
+                    }
                 }
             }
-        } else {
-            $arr = [];
+            $start->modify('+1 day');
         }
-        return $arr;
+        return $ret;
     }
 
     public static function fetchActiveUserIds($date) {

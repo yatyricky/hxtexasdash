@@ -20,6 +20,7 @@ class NewUser extends React.Component {
         this.applyChannelSelector = this.applyChannelSelector.bind(this);
         this.applyversionSelector = this.applyversionSelector.bind(this);
         this.updateTimeScale = this.updateTimeScale.bind(this);
+        this.renderChartTable = this.renderChartTable.bind(this);
         this.lastRequest = null;
 
         this.targetDateEnd = moment(new Date()).subtract(1, 'days');
@@ -93,214 +94,73 @@ class NewUser extends React.Component {
             name: "新设备",
             data: []
         };
-        switch (this.state.timeScaleSelector) {
-            case "day":
-                for (let i = 0, n = data.length; i < n; i++) {
-
-                    config.categories.push(data[i].date);
-                    const allUsers = data[i].data;
-                    const userIds = Object.keys(allUsers);
-                    // apply filter
-                    // find device ids
-                    const devices = [];
-                    let account = 0;
-                    for (let j = 0, m = userIds.length; j < m; j++) {
-                        const item = allUsers[userIds[j]];
-                        if ((item.channel == this.state.channelSelector || this.state.channelSelector == "all")
-                            && (item.version == this.state.versionSelector || this.state.versionSelector == "all")) {
-                            if (Flag.logUseIsNewDevice == true) {
-                                if (item.newDevice == 1) {
-                                    devices.push(item.deviceId);
-                                }
-                            } else {
-                                if (devices.indexOf(item.deviceId) == -1) {
-                                    devices.push(item.deviceId);
-                                }
-                            }
-                            account += 1;
-                        }
-                    }
-
-                    // chart
-                    dnid.data.push(account);
-                    dndid.data.push(devices.length);
-                    // table
-                    entries.unshift(
-                        <tr key={i}>
-                            <td className="font-small">{data[i].date}</td>
-                            <td className="font-small">{account}</td>
-                            <td className="font-small">{devices.length}</td>
-                        </tr>
-                    );
-                }
-                break;
-            case "hour":
-                let trkey = 0;
-                for (let i = 0, n = data.length; i < n; i++) {
-                    const sortable = [];
-                    const allUsers = data[i].data;
-                    const userIds = Object.keys(allUsers);
-                    for (let j = 0, m = userIds.length; j < m; j++) {
-                        sortable.push([userIds[j], allUsers[userIds[j]]]);
-                    }
-                    sortable.sort(function(a, b) {
-                        return moment(a[1].timeStamp) - moment(b[1].timeStamp);
-                    });
-
-                    let timeStart = moment(data[i].date.substring(0, 10));
-                    let endOfDay = moment(timeStart).add(24, 'hours');
-                    let uidIndex = 0;
-                    const countDevices = [];
-                    do {
-                        timeStart.add(1, 'hour');
-                        config.categories.push(timeStart.format("YYYY-MM-DD HH:mm:ss"));
-                        // apply filter
-                        // find device ids
-                        const devices = [];
-                        let account = 0;
-
-                        while (uidIndex < sortable.length && moment(sortable[uidIndex][1].timeStamp) < timeStart) {
-                            const item = sortable[uidIndex][1];
-                            if ((item.channel == this.state.channelSelector || this.state.channelSelector == "all")
-                                && (item.version == this.state.versionSelector || this.state.versionSelector == "all")) {
-                                if (Flag.logUseIsNewDevice == true) {
-                                    if (item.newDevice == 1) {
-                                        devices.push(item.deviceId);
-                                    }
-                                } else {
-                                    if (countDevices.indexOf(item.deviceId) == -1) {
-                                        devices.push(item.deviceId);
-                                        countDevices.push(item.deviceId);
-                                    }
-                                }
-                                account += 1;
-                            }
-                            uidIndex ++;
-                        }
-
-                        // chart
-                        dnid.data.push(account);
-                        dndid.data.push(devices.length);
-                        // table
-                        entries.unshift(
-                            <tr key={trkey++}>
-                                <td className="font-small">{timeStart.format("YYYY-MM-DD HH:mm:ss")}</td>
-                                <td className="font-small">{account}</td>
-                                <td className="font-small">{devices.length}</td>
-                            </tr>
-                        );
-
-                    } while (timeStart < endOfDay);
-                }
-                break;
-            case "week":
-                let devices = [];
-                let account = 0;
-                let i = 0;
-                for (i = 0; i < data.length; i++) {
-                    if (i % 7 == 0) {
-                        config.categories.push(data[i].date);
-                        devices = [];
-                        account = 0;
-                    }
-                    const allUsers = data[i].data;
-                    const userIds = Object.keys(allUsers);
-                    // apply filter
-                    // find device ids
-                    for (let j = 0, m = userIds.length; j < m; j++) {
-                        const item = allUsers[userIds[j]];
-                        if ((item.channel == this.state.channelSelector || this.state.channelSelector == "all")
-                            && (item.version == this.state.versionSelector || this.state.versionSelector == "all")) {
-                            if (Flag.logUseIsNewDevice == true) {
-                                if (item.newDevice == 1) {
-                                    devices.push(item.deviceId);
-                                }
-                            } else {
-                                if (devices.indexOf(item.deviceId) == -1) {
-                                    devices.push(item.deviceId);
-                                }
-                            }
-                            account += 1;
-                        }
-                    }
-                    if ((i + 1) % 7 == 0) {
-                        // chart
-                        dnid.data.push(account);
-                        dndid.data.push(devices.length);
-                        // table
-                        entries.unshift(
-                            <tr key={i}>
-                                <td className="font-small">{data[i - 6].date}</td>
-                                <td className="font-small">{account}</td>
-                                <td className="font-small">{devices.length}</td>
-                            </tr>
-                        );
-                    }
-                }
-
-                if (i % 7 != 0) {
-                    i -= 1;
-                    const lastPeriodI = Math.floor(i / 7.0) * 7;
-
-                    // chart
-                    dnid.data.push(account);
-                    dndid.data.push(devices.length);
-                    // table
-                    entries.unshift(
-                        <tr key={i}>
-                            <td className="font-small">{data[lastPeriodI].date}</td>
-                            <td className="font-small">{account}</td>
-                            <td className="font-small">{devices.length}</td>
-                        </tr>
-                    );
-                }
-                break;
-            case "month":
-                let dayIndex = 0;
-                while (dayIndex < data.length) {
-                    let periodStart = moment(data[dayIndex].date);
-                    let periodEnd = periodStart.clone().endOf('month');
-
-                    config.categories.push(data[dayIndex].date);
-                    const devices = [];
-                    let account = 0;
-                    while (periodStart.isSameOrBefore(periodEnd) && dayIndex < data.length) {
-                        // One day
-                        const userIds = Object.keys(data[dayIndex].data);
-                        for (let j = 0, m = userIds.length; j < m; j++) {
-                            const item = data[dayIndex].data[userIds[j]];
-                            if ((item.channel == this.state.channelSelector || this.state.channelSelector == "all")
-                                && (item.version == this.state.versionSelector || this.state.versionSelector == "all")) {
-                                if (devices.indexOf(item.deviceId) == -1) {
-                                    devices.push(item.deviceId);
-                                }
-                                account += 1;
-                            }
-                        }
-
-                        if (periodStart.isSame(periodEnd.format('YYYY-MM-DD')) || dayIndex == data.length - 1) {
-                            // chart
-                            dnid.data.push(account);
-                            dndid.data.push(devices.length);
-                            // table
-                            entries.unshift(
-                                <tr key={dayIndex}>
-                                    <td className="font-small">{config.categories[config.categories.length - 1]}</td>
-                                    <td className="font-small">{account}</td>
-                                    <td className="font-small">{devices.length}</td>
-                                </tr>
-                            );
-                        }
-
-                        periodStart.add(1, 'day');
-                        dayIndex += 1;
-                    }
-                }
-                break;
-            default:
-                break;
+        
+        console.log('1');
+        let i = 0;
+        let keyI = 0;
+        let timeIndex = moment(this.state.inputDateValueStart).startOf('day');
+        if (this.state.timeScaleSelector == "month") {
+            timeIndex.startOf('month');
         }
-
+        let timeBoundary = moment(this.state.inputDateValueEnd).startOf('day').add(1, 'day');
+        const allDevices = [];
+        while (timeIndex.isBefore(timeBoundary)) {
+            let periodStartFormat = null;
+            switch (this.state.timeScaleSelector) {
+                case "hour":
+                    periodStartFormat = timeIndex.format('YYYY-MM-DD HH:mm');
+                    timeIndex.add(1, 'hour');
+                    break;
+                case "day":
+                    periodStartFormat = timeIndex.format('YYYY-MM-DD');
+                    timeIndex.add(1, 'day');
+                    break;
+                case "week":
+                    periodStartFormat = timeIndex.format('YYYY-MM-DD');
+                    timeIndex.add(7, 'days');
+                    break;
+                case "month":
+                    periodStartFormat = timeIndex.format('YYYY-MM');
+                    timeIndex.add(1, 'month');
+                    break;
+                default:
+                    break;
+            }
+            
+            const devices = [];
+            const users = [];
+            let account = 0;
+            while (i < data.length && moment(data[i].timeStamp).isBefore(timeIndex)) {
+                if ((data[i].channel == this.state.channelSelector || this.state.channelSelector == "all")
+                && (data[i].version == this.state.versionSelector || this.state.versionSelector == "all")) {
+                    if (Flag.logUseIsNewDevice == true) {
+                        if (data[i].newDevice == 1) {
+                            devices.push(data[i].deviceId);
+                        }
+                    } else {
+                        if (allDevices.indexOf(data[i].deviceId) == -1) {
+                            devices.push(data[i].deviceId);
+                            allDevices.push(data[i].deviceId);
+                        }
+                    }
+                    account += 1;
+                }
+                i += 1;
+            }
+            // chart
+            config.categories.push(periodStartFormat);
+            dnid.data.push(account);
+            dndid.data.push(devices.length);
+            // table
+            entries.unshift(
+                <tr key={keyI++}>
+                    <td className="font-small">{periodStartFormat}</td>
+                    <td className="font-small">{account}</td>
+                    <td className="font-small">{devices.length}</td>
+                </tr>
+            );
+        }
+        console.log('2');
         // update channel selector
         this.channelSelectorOptionsDom.splice(1);
         const channelsKeys = Object.keys(channels);
