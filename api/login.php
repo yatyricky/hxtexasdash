@@ -44,6 +44,7 @@ function getAccess($ugroup) {
     if (isset($fpagesAllowed['/playerChipsChange'])) {$menu['gdta']['options'][] = array("text" => "玩家筹码变动", "to" => "playerChipsChange");}
     if (isset($fpagesAllowed['/queryPlayer'])) {$menu['opts']['options'][] = array("text" => "查询玩家", "to" => "queryPlayer");}
     if (isset($fpagesAllowed['/modPlayerStats'])) {$menu['opts']['options'][] = array("text" => "修改玩家属性", "to" => "modPlayerStats");}
+    if (isset($fpagesAllowed['/queryPayment'])) {$menu['opts']['options'][] = array("text" => "查询订单", "to" => "queryPayment");}
     if (isset($fpagesAllowed['/queryTable'])) {$menu['opts']['options'][] = array("text" => "查询牌桌", "to" => "queryTable");}
     if (isset($fpagesAllowed['/eventConfig'])) {$menu['opts']['options'][] = array("text" => "活动配置", "to" => "eventConfig");}
 
