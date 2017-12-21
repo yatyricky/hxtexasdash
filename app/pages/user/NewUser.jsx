@@ -223,9 +223,7 @@ class NewUser extends React.Component {
                             account += 1;
                         }
                     }
-
                     if ((i + 1) % 7 == 0) {
-
                         // chart
                         dnid.data.push(account);
                         dndid.data.push(devices.length);
@@ -258,37 +256,45 @@ class NewUser extends React.Component {
                 }
                 break;
             case "month":
-                for (let i = 0, n = data.length; i < n; i++) {
+                let dayIndex = 0;
+                while (dayIndex < data.length) {
+                    let periodStart = moment(data[dayIndex].date);
+                    let periodEnd = periodStart.clone().endOf('month');
 
-                    config.categories.push(data[i].date);
-                    const allUsers = data[i].data;
-                    const userIds = Object.keys(allUsers);
-                    // apply filter
-                    // find device ids
+                    config.categories.push(data[dayIndex].date);
                     const devices = [];
                     let account = 0;
-                    for (let j = 0, m = userIds.length; j < m; j++) {
-                        const item = allUsers[userIds[j]];
-                        if ((item.channel == this.state.channelSelector || this.state.channelSelector == "all")
-                            && (item.version == this.state.versionSelector || this.state.versionSelector == "all")) {
-                            if (devices.indexOf(item.deviceId) == -1) {
-                                devices.push(item.deviceId);
+                    while (periodStart.isSameOrBefore(periodEnd) && dayIndex < data.length) {
+                        // One day
+                        const userIds = Object.keys(data[dayIndex].data);
+                        for (let j = 0, m = userIds.length; j < m; j++) {
+                            const item = data[dayIndex].data[userIds[j]];
+                            if ((item.channel == this.state.channelSelector || this.state.channelSelector == "all")
+                                && (item.version == this.state.versionSelector || this.state.versionSelector == "all")) {
+                                if (devices.indexOf(item.deviceId) == -1) {
+                                    devices.push(item.deviceId);
+                                }
+                                account += 1;
                             }
-                            account += 1;
                         }
-                    }
 
-                    // chart
-                    dnid.data.push(account);
-                    dndid.data.push(devices.length);
-                    // table
-                    entries.unshift(
-                        <tr key={i}>
-                            <td className="font-small">{data[i].date}</td>
-                            <td className="font-small">{account}</td>
-                            <td className="font-small">{devices.length}</td>
-                        </tr>
-                    );
+                        if (periodStart.isSame(periodEnd.format('YYYY-MM-DD')) || dayIndex == data.length - 1) {
+                            // chart
+                            dnid.data.push(account);
+                            dndid.data.push(devices.length);
+                            // table
+                            entries.unshift(
+                                <tr key={dayIndex}>
+                                    <td className="font-small">{config.categories[config.categories.length - 1]}</td>
+                                    <td className="font-small">{account}</td>
+                                    <td className="font-small">{devices.length}</td>
+                                </tr>
+                            );
+                        }
+
+                        periodStart.add(1, 'day');
+                        dayIndex += 1;
+                    }
                 }
                 break;
             default:
