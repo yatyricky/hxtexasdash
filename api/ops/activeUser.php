@@ -1,6 +1,7 @@
 <?php
 require_once('../auth.php');
-require_once 'LogManager.php';
+require_once('LogManager.php');
+require_once('../conn.php');
 
 header('Content-type: application/json');
 
@@ -10,29 +11,25 @@ $auth = authenticate();
 $header = $auth['header'];
 if ($auth['result'] == 'auth') {
     if ($auth['view'] == '/activeUser') {
+        // Authenticated
         $ret['result'] = "auth";
 
-        // Authenticated
-        $dateStart = $_POST['start'];
-        $dateEnd = $_POST['end'];
+        // Get user channels
+        $dbhelper = new DBHelper();
+        $channels = $dbhelper->retrieveChannels($auth['uid']);
 
-        $start = new DateTime($dateStart);
-        $end = new DateTime($dateEnd);
-        $dt = $start;
+        $bulk = LogManager::fetchActiveUserInPeriodFiltered($_POST['start'], $_POST['end'], $channels);
 
-        $daus = [];
-
-        while ($end >= $dt) {
-            $obj = [];
-            $obj['date'] = $dt->format('Y-m-d');
-            $dau = LogManager::fetchActiveUserIds($obj['date']);
-            $obj['dau'] = count($dau);
-            $daus[] = $obj;
-
-            $dt->modify('+1 day');
+        $sumChannels = [];
+        $sumVersions = [];
+        foreach ($bulk as $k => $v) {
+            $sumChannels[$v['channel']] = 1;
+            $sumVersions[$v['version']] = 1;
         }
 
-        $ret['data'] = $daus;
+        $ret['data'] = $bulk;
+        $ret['channels'] = LogManager::mapChannelConfig(array_keys($sumChannels));
+        $ret['versions'] = array_keys($sumVersions);
     } else {
         $header = 'HTTP/1.0 400 Bad Request';
         $ret['result'] = "Original post data was altered.";

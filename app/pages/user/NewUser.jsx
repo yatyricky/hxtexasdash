@@ -95,7 +95,6 @@ class NewUser extends React.Component {
             data: []
         };
         
-        console.log('1');
         let i = 0;
         let keyI = 0;
         let timeIndex = moment(this.state.inputDateValueStart).startOf('day');
@@ -160,7 +159,6 @@ class NewUser extends React.Component {
                 </tr>
             );
         }
-        console.log('2');
         // update channel selector
         this.channelSelectorOptionsDom.splice(1);
         const channelsKeys = Object.keys(channels);

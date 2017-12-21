@@ -59,6 +59,7 @@ class LogManager {
      *  [
      *      {
      *          timeStamp: '2017-11-05 11:23:34',
+     *          userId: 1000001,
      *          version: 'v0.0.1.0001'
      *          channel: 'dev_test_1',
      *          deviceId: '423412341',
@@ -138,6 +139,87 @@ class LogManager {
             }
         }
         return $arr;
+    }
+
+    /**
+     * $t is short for $tokens
+     *  0. timestamp(UTC+8)
+     *  1. player_id
+     *  2. player_name
+     *  3. game_version
+     *  4. channel_name
+     *  5. device_id(IMEI, UDID)
+     *  6. os_version(6.0, 10.1.1)
+     *  7. network_type(Wi-Fi, 4G)
+     *  8. ip_address
+     *  9. is_new_device
+     * 
+     * NOT ID UNIQUE, NOT DEVICE UNIQUE
+     * return: array
+     *  [
+     *      {
+     *          userId: 1000001,
+     *          version: 'v0.0.1.0001'
+     *          channel: 'dev_test_1',
+     *          deviceId: '423412341',
+     *          newDevice: 1
+     *      },
+     *      ...
+     *  ]
+     *  ** NO FILE CACHE **
+     * 
+     */
+    public static function fetchActiveUserInPeriodFiltered($dateStart, $dateEnd, $channels) {
+        $config = new Zend\Config\Config(include '../config.php');
+
+        $ret = [];
+        $start = new DateTime($dateStart);
+        $end = new DateTime($dateEnd);
+        $channelsFlip = array_flip($channels);
+        while ($end >= $start) {
+            $dayStr = $start->format('Y-m-d');
+            
+            $uniqueDevices = [];
+            $rawPath = $config->rootDir.DIRECTORY_SEPARATOR.'login'.DIRECTORY_SEPARATOR.$dayStr.'.txt';
+            if (file_exists($rawPath)) {
+                $lines = file($rawPath, FILE_IGNORE_NEW_LINES);
+                foreach ($lines as $k => $v) {
+                    $t = explode('|', trim($v));
+                    // channel must match
+                    if (!isset($uniqueDevices[$t[5]]) && isset($channelsFlip[$t[4]])) {
+                        $uniqueDevices[$t[5]] = 1;
+                        $obj = array(
+                            'timeStamp' => $t[0],
+                            'version' => $t[3],
+                            'channel' => $t[4],
+                            'deviceId' => $t[5]
+                        );
+                        $ret[] = $obj;
+                    }
+                }
+            }
+
+            $rawPath = $config->rootDir.DIRECTORY_SEPARATOR.'logout'.DIRECTORY_SEPARATOR.$dayStr.'.txt';
+            if (file_exists($rawPath)) {
+                $lines = file($rawPath, FILE_IGNORE_NEW_LINES);
+                foreach ($lines as $k => $v) {
+                    $t = explode('|', trim($v));
+                    // channel must match
+                    if (!isset($uniqueDevices[$t[5]]) && isset($channelsFlip[$t[4]])) {
+                        $uniqueDevices[$t[5]] = 1;
+                        $obj = array(
+                            'timeStamp' => $t[0],
+                            'version' => $t[3],
+                            'channel' => $t[4],
+                            'deviceId' => $t[5]
+                        );
+                        $ret[] = $obj;
+                    }
+                }
+            }
+            $start->modify('+1 day');
+        }
+        return $ret;
     }
 
     /**
