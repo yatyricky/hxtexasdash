@@ -11,8 +11,6 @@ import NewUser from './pages/user/NewUser.jsx';
 import ActiveUser from './pages/user/ActiveUser.jsx';
 import PaidUser from './pages/user/PaidUser.jsx';
 import Session from './pages/user/Session.jsx';
-import Version from './pages/user/Version.jsx';
-import Channel from './pages/user/Channel.jsx';
 import CurrentOnline from './pages/user/CurrentOnline.jsx';
 
 import PlayerRetention from './pages/retention/PlayerRetention.jsx';
@@ -41,8 +39,6 @@ class Main extends React.Component {
                     <Route path="activeUser" name="activeUser" component={ActiveUser}></Route>
                     <Route path="paidUser" name="paidUser" component={PaidUser}></Route>
                     <Route path="session" name="session" component={Session}></Route>
-                    <Route path="version" name="version" component={Version}></Route>
-                    <Route path="channel" name="channel" component={Channel}></Route>
                     <Route path="currentOnline" name="currentOnline" component={CurrentOnline}></Route>
                     
                     <Route path="playerRetention" name="playerRetention" component={PlayerRetention}></Route>

@@ -1,6 +1,7 @@
 <?php
 require_once('../auth.php');
-require_once 'LogManager.php';
+require_once('LogManager.php');
+require_once('../conn.php');
 
 header('Content-type: application/json');
 
@@ -10,48 +11,29 @@ $auth = authenticate();
 $header = $auth['header'];
 if ($auth['result'] == 'auth') {
     if ($auth['view'] == '/paidUser') {
+        // Authenticated
         $ret['result'] = "auth";
 
-        // Authenticated
-        $dateStart = $_POST['start'];
-        $dateEnd = $_POST['end'];
+        // Get user channels
+        $dbhelper = new DBHelper();
+        $channels = $dbhelper->retrieveChannels($auth['uid']);
 
-        $start = new DateTime($dateStart);
-        $end = new DateTime($dateEnd);
-        $dt = $start;
+        $bulkPayment = LogManager::fetchPaymentsInPeriodFiltered($_POST['start'], $_POST['end'], $channels);
+        $bulkNewUser = LogManager::fetchRegisterInPeriodFiltered($_POST['start'], $_POST['end'], $channels);
+        $bulkActUser = LogManager::fetchActiveUserInPeriodFiltered($_POST['start'], $_POST['end'], $channels);
 
-        $data = [];
-
-        while ($end >= $dt) {
-            $obj = [];
-            $obj['date'] = $dt->format('Y-m-d');
-            $paidUsers = LogManager::fetchPaidUsers($obj['date']);
-            $dnu = LogManager::fetchNewUserIds($obj['date']);
-            $dau = count(LogManager::fetchActiveUserIds($obj['date']));
-
-            $revenue = 0;
-            $newPaid = 0;
-            $dnuFlip = array_flip($dnu);
-            $dnuCount = count($dnu);
-            foreach ($paidUsers as $k => $v) {
-                $revenue += $v[0];
-                if (isset($dnuFlip[$k]) == true) {
-                    $newPaid ++;
-                }
-            }
-            $obj['revenue'] = $revenue;
-            $obj['newPaid'] = $newPaid;
-            $obj['pu'] = count($paidUsers);
-            $obj['pr'] = $dau == 0 ? 0 : $obj['pu'] / $dau;
-            $obj['npr'] = $dnuCount == 0 ? 0 : $newPaid / $dnuCount;
-            $obj['arpu'] = $dau == 0 ? 0 : $revenue / $dau;
-            $obj['arppu'] = $obj['pu'] == 0 ? 0 : $revenue / $obj['pu'];
-            $data[] = $obj;
-
-            $dt->modify('+1 day');
+        $sumChannels = [];
+        foreach ($bulkPayment as $k => $v) {
+            $sumChannels[$v['channel']] = 1;
         }
 
-        $ret['data'] = $data;
+        $ret['dataP'] = $bulkPayment;
+        $ret['dataN'] = $bulkNewUser;
+        $ret['dataA'] = $bulkActUser;
+        $ret['channels'] = LogManager::mapChannelConfig(array_keys($sumChannels));
+
+        // free db connection
+        unset($dbhelper);
     } else {
         $header = 'HTTP/1.0 400 Bad Request';
         $ret['result'] = "Original post data was altered.";

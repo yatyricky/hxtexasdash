@@ -35,8 +35,6 @@ function getAccess($ugroup) {
     if (isset($fpagesAllowed['/activeUser'])) {$menu['user']['options'][] = array("text" => "活跃用户", "to" => "activeUser");}
     if (isset($fpagesAllowed['/paidUser'])) {$menu['user']['options'][] = array("text" => "付费用户", "to" => "paidUser");}
     if (isset($fpagesAllowed['/session'])) {$menu['user']['options'][] = array("text" => "启动次数", "to" => "session");}
-    if (isset($fpagesAllowed['/version'])) {$menu['user']['options'][] = array("text" => "版本分布", "to" => "version");}
-    if (isset($fpagesAllowed['/channel'])) {$menu['user']['options'][] = array("text" => "渠道分布", "to" => "channel");}
     if (isset($fpagesAllowed['/currentOnline'])) {$menu['user']['options'][] = array("text" => "在线情况", "to" => "currentOnline");}
     if (isset($fpagesAllowed['/playerRetention'])) {$menu['retn']['options'][] = array("text" => "留存率", "to" => "playerRetention");}
     if (isset($fpagesAllowed['/paymentRanking'])) {$menu['paym']['options'][] = array("text" => "付费排行榜", "to" => "paymentRanking");}

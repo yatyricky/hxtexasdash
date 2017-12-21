@@ -92,7 +92,7 @@ class LogManager {
                             'userId' => $t[1],
                             'version' => $t[3],
                             'channel' => $t[4],
-                            'deviceId' => $t[5],
+                            'deviceId' => md5($t[5]),
                             'newDevice' => $t[9]
                         );
                     }
@@ -192,7 +192,7 @@ class LogManager {
                             'timeStamp' => $t[0],
                             'version' => $t[3],
                             'channel' => $t[4],
-                            'deviceId' => $t[5]
+                            'deviceId' => md5($t[5])
                         );
                         $ret[] = $obj;
                     }
@@ -211,7 +211,7 @@ class LogManager {
                             'timeStamp' => $t[0],
                             'version' => $t[3],
                             'channel' => $t[4],
-                            'deviceId' => $t[5]
+                            'deviceId' => md5($t[5])
                         );
                         $ret[] = $obj;
                     }
@@ -270,6 +270,60 @@ class LogManager {
             }
         }
         return $arr;
+    }
+
+    /**
+     *  $t = 
+     *  0. 时间戳(UTC+8)
+     *  1. 玩家ID
+     *  2. 商品类型
+     *  3. 充值金额(分)
+     *  4. 渠道名称
+     *  5. 支付方式
+     *  6. 设备ID
+     * 
+     *  returns:
+     *  [
+     *      {
+     *          timeStamp: 
+     *          amount:
+     *          channel
+     *          method:
+     *          deviceId:
+     *      },
+     *      ...
+     *  ]
+     */
+    public static function fetchPaymentsInPeriodFiltered($dateStart, $dateEnd, $channels) {
+        $config = new Zend\Config\Config(include '../config.php');
+
+        $start = new DateTime($dateStart);
+        $end = new DateTime($dateEnd);
+        $channelsFlip = array_flip($channels);
+        $ret = [];
+        while ($end >= $start) {
+            $dayStr = $start->format('Y-m-d');
+
+            $rawPath = $config->rootDir.DIRECTORY_SEPARATOR.'payment'.DIRECTORY_SEPARATOR.$dayStr.'.txt';
+            if (file_exists($rawPath)) {
+                $lines = file($rawPath, FILE_IGNORE_NEW_LINES);
+                foreach ($lines as $k => $v) {
+                    $t = explode('|', trim($v));
+                    // channel must match
+                    if (isset($channelsFlip[$t[4]])) {
+                        $ret[] = array(
+                            'timeStamp' => $t[0],
+                            'amount' => $t[3],
+                            'channel' => $t[4],
+                            'method' => $t[5],
+                            'deviceId' => md5($t[6])
+                        );
+                    }
+                }
+            }
+            $start->modify('+1 day');
+        }
+        return $ret;
     }
     
     public static function fetchLogins($date) {

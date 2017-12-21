@@ -30,6 +30,8 @@ if ($auth['result'] == 'auth') {
         $ret['data'] = $bulk;
         $ret['channels'] = LogManager::mapChannelConfig(array_keys($sumChannels));
         $ret['versions'] = array_keys($sumVersions);
+        
+        unset($dbhelper);
     } else {
         $header = 'HTTP/1.0 400 Bad Request';
         $ret['result'] = "Original post data was altered.";

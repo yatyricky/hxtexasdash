@@ -6,6 +6,7 @@ import { CancelToken } from 'axios';
 
 import {Flag} from '../../Flag.js';
 import DataStore from '../../DataStore.js';
+import RadioGroup from '../../components/RadioGroup.jsx';
 
 const moment = require('moment');
 
@@ -16,15 +17,25 @@ class PaidUser extends React.Component {
         this.dataStore = new DataStore();
         this.validateInput = this.validateInput.bind(this);
         this.postData = this.postData.bind(this);
+        this.applyChannelSelector = this.applyChannelSelector.bind(this);
+        this.updateTimeScale = this.updateTimeScale.bind(this);
+        this.renderChartTable = this.renderChartTable.bind(this);
         this.lastRequest = null;
 
         this.targetDateEnd = moment(new Date()).subtract(1, 'days');
         this.targetDateStart = moment(new Date()).subtract(7, 'days');
 
+        this.channelSelectorOptionsDom = [];
+        this.channelSelectorOptionsDom.push(
+            <option key={0} value={"all"}>全部渠道</option>
+        );
+
         this.state = {
-            "flag": Flag.nothing,
-            "inputDateValueStart": this.targetDateStart.format('YYYY-MM-DD'),
-            "inputDateValueEnd": this.targetDateEnd.format('YYYY-MM-DD')
+            flag: Flag.nothing,
+            inputDateValueStart: this.targetDateStart.format('YYYY-MM-DD'),
+            inputDateValueEnd: this.targetDateEnd.format('YYYY-MM-DD'),
+            channelSelector: "all",
+            timeScaleSelector: "day"
         }
     }
 
@@ -65,34 +76,118 @@ class PaidUser extends React.Component {
     }
 
     renderChartTable() {
-        const result = this.state.result.data;
+        const {dataP, dataN, dataA, channels} = this.state.result;
+        const hcCategories = [];
+        const hcData = [];
         const entries = [];
 
-        const config = {categories: [], data: []}; // highcharts config
-        let rr1 = {
-            "name": "付费金额",
-            "data": []
-        };
-
-        for (let i = 0, n = result.length; i < n; i++) {
-            config.categories.push(result[i].date);
-            rr1.data.push(parseFloat(result[i].revenue) / 100.0);
-
+        // time loop start
+        let i = 0, iA = 0, iN = 0;
+        let keyI = 0;
+        let timeIndex = moment(this.state.inputDateValueStart).startOf('day');
+        if (this.state.timeScaleSelector == "month") {
+            timeIndex.startOf('month');
+        }
+        let timeBoundary = moment(this.state.inputDateValueEnd).startOf('day').add(1, 'day');
+        while (timeIndex.isBefore(timeBoundary)) {
+            let periodStartFormat = null;
+            switch (this.state.timeScaleSelector) {
+                case "hour":
+                    periodStartFormat = timeIndex.format('YYYY-MM-DD HH:mm');
+                    timeIndex.add(1, 'hour');
+                    break;
+                case "day":
+                    periodStartFormat = timeIndex.format('YYYY-MM-DD');
+                    timeIndex.add(1, 'day');
+                    break;
+                case "week":
+                    periodStartFormat = timeIndex.format('YYYY-MM-DD');
+                    timeIndex.add(7, 'days');
+                    break;
+                case "month":
+                    periodStartFormat = timeIndex.format('YYYY-MM');
+                    timeIndex.add(1, 'month');
+                    break;
+                default:
+                    break;
+            }
+            
+            const devices = [];
+            const aDevices = [];
+            const nDevices = [];
+            let newPayDevices = 0;
+            let aus = 0;
+            let sum = 0;
+            while (iN < dataN.length && moment(dataN[iN].timeStamp).isBefore(timeIndex)) {
+                if (dataN[iN].channel == this.state.channelSelector || this.state.channelSelector == "all") {
+                    if (nDevices.indexOf(dataN[iN].deviceId) == -1) {
+                        nDevices.push(dataN[iN].deviceId);
+                    }
+                }
+                iN ++;
+            }
+            while (i < dataP.length && moment(dataP[i].timeStamp).isBefore(timeIndex)) {
+                if (dataP[i].channel == this.state.channelSelector || this.state.channelSelector == "all") {
+                    sum += parseFloat(dataP[i].amount);
+                    if (devices.indexOf(dataP[i].deviceId) == -1) {
+                        devices.push(dataP[i].deviceId);
+                        if (nDevices.indexOf(dataP[i].deviceId) != -1) {
+                            newPayDevices ++;
+                        }
+                    }
+                }
+                i += 1;
+            }
+            while (iA < dataA.length && moment(dataA[iA].timeStamp).isBefore(timeIndex)) {
+                if (dataA[iA].channel == this.state.channelSelector || this.state.channelSelector == "all") {
+                    if (aDevices.indexOf(dataA[iA].deviceId) == -1) {
+                        aDevices.push(dataA[iA].deviceId);
+                    }
+                }
+                iA ++;
+            }
+            // chart
+            hcCategories.push(periodStartFormat);
+            hcData.push(sum / 100.0);
+            let cvr = 0;
+            if (aDevices.length > 0) {
+                cvr = devices.length / aDevices.length * 100.0;
+            }
+            let ncvr = 0;
+            if (nDevices.length > 0) {
+                ncvr = newPayDevices / nDevices.length * 100.0;
+            }
+            let arpu = 0;
+            if (aDevices.length > 0) {
+                arpu = sum / aDevices.length / 100.0;
+            }
+            let arppu = 0;
+            if (devices.length > 0) {
+                arppu = sum / devices.length / 100.0;
+            }
+            // table
             entries.unshift(
-                <tr key={i}>
-                    <td className="font-small">{result[i].date}</td>
-                    <td className="font-small">{(result[i].revenue / 100.0).toFixed(2)}</td>
-                    <td className="font-small">{result[i].pu}</td>
-                    <td className="font-small">{(result[i].pr * 100).toFixed(2) + '%'}</td>
-                    <td className="font-small">{result[i].newPaid}</td>
-                    <td className="font-small">{(result[i].npr * 100).toFixed(2) + '%'}</td>
-                    <td className="font-small">{(result[i].arpu / 100.0).toFixed(2)}</td>
-                    <td className="font-small">{(result[i].arppu / 100.0).toFixed(2)}</td>
+                <tr key={keyI++}>
+                    <td className="font-small">{periodStartFormat}</td>
+                    <td className="font-small">{(sum / 100.0).toFixed(2)}</td>
+                    <td className="font-small">{devices.length}</td>
+                    <td className="font-small">{cvr.toFixed(2)}%</td>
+                    <td className="font-small">{newPayDevices}</td>
+                    <td className="font-small">{ncvr.toFixed(2)}%</td>
+                    <td className="font-small">{arpu.toFixed(2)}</td>
+                    <td className="font-small">{arppu.toFixed(2)}</td>
                 </tr>
             );
         }
 
-        config.data.push(rr1);
+        // update channel selector
+        this.channelSelectorOptionsDom.splice(1);
+        const channelsKeys = Object.keys(channels);
+        for (let i = 0; i < channelsKeys.length; i ++) {
+            this.channelSelectorOptionsDom.push(
+                <option key={i+1} value={channelsKeys[i]}>{channels[channelsKeys[i]]}</option>
+            );
+        }
         const highConfig = {
             "chart": {
                 "zoomType": 'x'
@@ -101,17 +196,21 @@ class PaidUser extends React.Component {
                 "text": "付费用户"
             },
             "xAxis": {
-                "categories": config.categories
+                "categories": hcCategories
             },
             "yAxis": {
                 "title": {
                     "text": "数值"
                 }
             },
-            "series": config.data
+            "series": [
+                {
+                    "name": "付费金额",
+                    "data": hcData
+                }
+            ]
 
         };
-
         return (
             <div className="request-result">
                 <ReactHighcharts config = {highConfig} />
@@ -119,11 +218,11 @@ class PaidUser extends React.Component {
                     <table className="table table-striped">
                         <thead>
                             <tr>
-                                <th className="font-small">日期</th>
+                                <th className="font-small">时间段</th>
                                 <th className="font-small">付费金额</th>
-                                <th className="font-small">付费用户</th>
+                                <th className="font-small">付费设备</th>
                                 <th className="font-small">付费率</th>
-                                <th className="font-small">新付费用户</th>
+                                <th className="font-small">新付费设备</th>
                                 <th className="font-small">新付费率</th>
                                 <th className="font-small">ARPU</th>
                                 <th className="font-small">ARPPU</th>
@@ -165,6 +264,14 @@ class PaidUser extends React.Component {
         });
         this.postData(inputDateStart.format('YYYYMMDD'), inputDateEnd.format('YYYYMMDD'));
     }
+    
+    applyChannelSelector() {
+        this.setState({channelSelector: this.refs.channelSelector.value});
+    }
+
+    updateTimeScale(value) {
+        this.setState({timeScaleSelector: value});
+    }
 
     render() {
         let ret;
@@ -192,6 +299,31 @@ class PaidUser extends React.Component {
                             value={this.state.inputDateValueEnd}
                             className="form-control mb-2 mb-sm-0"
                             onChange={this.validateInput}
+                        />
+                    </div>
+                    <div className="col-auto">
+                        <label htmlFor="channelSelector">选择渠道：</label>
+                        <select
+                            className="form-control mb-2 mb-sm-0"
+                            id="channelSelector"
+                            ref="channelSelector"
+                            value={this.state.channelSelector}
+                            onChange={this.applyChannelSelector}
+                        >
+                            {this.channelSelectorOptionsDom}
+                        </select>
+                    </div>
+                    <div className="col-auto">
+                        <label>时间颗粒度：</label>
+                        <RadioGroup
+                            rgClass="form-control mb-2 mb-sm-0"
+                            rlClass="nomargin-label channel-item"
+                            rrClass="hx-radios"
+                            rsClass="badge badge-primary channel-label"
+                            rrName="timeScale"
+                            rgValues={[["hour", "时"], ["day", "日"], ["week", "周"], ["month", "月"]]}
+                            rgDefault={this.state.timeScaleSelector}
+                            rgHandler={this.updateTimeScale}
                         />
                     </div>
                 </div>
