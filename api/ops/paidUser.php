@@ -18,8 +18,33 @@ if ($auth['result'] == 'auth') {
         $dbhelper = new DBHelper();
         $channels = $dbhelper->retrieveChannels($auth['uid']);
 
-        $bulkPayment = LogManager::fetchPaymentsInPeriodFiltered($_POST['start'], $_POST['end'], $channels);
-        $bulkNewUser = LogManager::fetchRegisterInPeriodFiltered($_POST['start'], $_POST['end'], $channels);
+        $bulkPayment = LogManager::fetchLogWithinPeriodFiltered(
+            $_POST['start'],
+            $_POST['end'],
+            $channels,
+            "payment",
+            array(
+                'timeStamp' => 0,
+                'amount' => 3,
+                'channel' => 4,
+                'method' => 5,
+                'deviceId' => 6
+            )
+        );
+        $bulkNewUser = LogManager::fetchLogWithinPeriodFiltered(
+            $_POST['start'],
+            $_POST['end'],
+            $channels,
+            "register",
+            array(
+                'timeStamp' => 0,
+                'userId' => 1,
+                'version' => 3,
+                'channel' => 4,
+                'deviceId' => 5,
+                'newDevice' => 9
+            )
+        );
         $bulkActUser = LogManager::fetchActiveUserInPeriodFiltered($_POST['start'], $_POST['end'], $channels);
 
         $sumChannels = [];

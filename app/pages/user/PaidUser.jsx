@@ -189,24 +189,25 @@ class PaidUser extends React.Component {
             );
         }
         const highConfig = {
-            "chart": {
-                "zoomType": 'x'
+            chart: {
+                zoomType: 'x'
             },
-            "title": {
-                "text": "付费用户"
+            title: {
+                text: "付费用户"
             },
-            "xAxis": {
-                "categories": hcCategories
+            xAxis: {
+                categories: hcCategories
             },
-            "yAxis": {
-                "title": {
-                    "text": "数值"
+            yAxis: {
+                title: {
+                    text: "数值"
                 }
             },
-            "series": [
+            series: [
                 {
-                    "name": "付费金额",
-                    "data": hcData
+                    name: "付费金额",
+                    type: "spline",
+                    data: hcData
                 }
             ]
 

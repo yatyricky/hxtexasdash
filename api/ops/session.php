@@ -10,87 +10,56 @@ $auth = authenticate();
 $header = $auth['header'];
 if ($auth['result'] == 'auth') {
     if ($auth['view'] == '/session') {
+        // Authenticated
         $ret['result'] = "auth";
 
-        // Authenticated
-        $dateStart = $_POST['start'];
-        $dateEnd = $_POST['end'];
-        // $dateStart = '2017-11-05';
-        // $dateEnd = '2017-11-07';
+        // Get user channels
+        $dbhelper = new DBHelper();
+        $channels = $dbhelper->retrieveChannels($auth['uid']);
 
-        $start = new DateTime($dateStart);
-        $end = new DateTime($dateEnd);
-        $dt = $start;
+        $bulkLogin = LogManager::fetchLogWithinPeriodFiltered(
+            $_POST['start'],
+            $_POST['end'],
+            $channels,
+            "login",
+            array(
+                'timeStamp' => 0,
+                'userId' => 1,
+                'version' => 3,
+                'channel' => 4
+            )
+        );
 
-        $data = [];
-        $sessionLengths = [];
+        $bulkLogout = LogManager::fetchLogWithinPeriodFiltered(
+            $_POST['start'],
+            $_POST['end'],
+            $channels,
+            "logout",
+            array(
+                'timeStamp' => 0,
+                'userId' => 1,
+                'version' => 3,
+                'channel' => 4
+            )
+        );
 
-        while ($end >= $dt) {
-            $obj = [];
-            $obj['date'] = $dt->format('Y-m-d');
-            
-            $logins = LogManager::fetchLogins($obj['date']);
-            $logouts = LogManager::fetchLogouts($obj['date']);
-
-            $sessionLength = [];
-            $startOfToday =  strtotime($dt->format('Y-m-d'));
-
-            $loginInfo = [];
-            foreach ($logins as $k => $v) {
-                $tokens = explode('|', LogManager::remove_utf8_bom($v));
-                $id = $tokens[1];
-                $time = trim($tokens[0]);
-                if (!isset($loginInfo[$id])) {
-                    $loginInfo[$id] = [];
-                }
-                $loginInfo[$id][] = $time;
-            }
-
-            foreach ($logouts as $k => $v) {
-                $tokens = explode('|', LogManager::remove_utf8_bom($v));
-                $id = $tokens[1];
-                $time = $tokens[0];
-
-                if (isset($loginInfo[$id])) {
-                    $earliestLogin = array_shift($loginInfo[$id]);
-                    if ($earliestLogin) {
-                        $currentSession = strtotime($time) - strtotime($earliestLogin);
-                    } else {
-                        $currentSession = strtotime($time) - $startOfToday;
-                    }
-                } else {
-                    // only logout, no login
-                    $currentSession = strtotime($time) - $startOfToday;
-                }
-
-                if ($currentSession < 0) {
-                    $sessionLength[] = 86400 - strtotime($earliestLogin) + $startOfToday;
-                    $sessionLength[] = strtotime($time) - $startOfToday;
-                } else {
-                    $sessionLength[] = $currentSession;
-                }
-            }
-
-            foreach ($loginInfo as $k => $v) {
-                while ($leftOver = array_shift($v)) {
-                    $leftOverSeconds = 86400 - strtotime($leftOver) + $startOfToday;
-                    $sessionLength[] = $leftOverSeconds;
-                }
-            }
-
-            $sum = array_sum($sessionLength);
-            $num = count($sessionLength);
-            $avg = $num == 0 ? 0 : $sum / $num;
-
-            $obj['session'] = $num;
-            $obj['avgLength'] = $avg;
-            $obj['sum'] = $sum;
-
-            $data[] = $obj;
-            $dt->modify('+1 day');
+        $sumChannels = [];
+        $sumVersions = [];
+        foreach ($bulkLogin as $k => $v) {
+            $sumChannels[$v['channel']] = 1;
+            $sumVersions[$v['version']] = 1;
+        }
+        foreach ($bulkLogout as $k => $v) {
+            $sumChannels[$v['channel']] = 1;
+            $sumVersions[$v['version']] = 1;
         }
 
-        $ret['data'] = $data;
+        $ret['dataI'] = $bulkLogin;
+        $ret['dataO'] = $bulkLogout;
+        $ret['channels'] = LogManager::mapChannelConfig(array_keys($sumChannels));
+        $ret['versions'] = array_keys($sumVersions);
+
+        unset($dbhelper);
     } else {
         $header = 'HTTP/1.0 400 Bad Request';
         $ret['result'] = "Original post data was altered.";

@@ -151,24 +151,25 @@ class ActiveUser extends React.Component {
             );
         }
         const highConfig = {
-            "chart": {
-                "zoomType": 'x'
+            chart: {
+                zoomType: 'x'
             },
-            "title": {
-                "text": "活跃设备"
+            title: {
+                text: "活跃设备"
             },
-            "xAxis": {
-                "categories": hcCategories
+            xAxis: {
+                categories: hcCategories
             },
-            "yAxis": {
-                "title": {
-                    "text": "活跃设备"
+            yAxis: {
+                title: {
+                    text: "活跃设备"
                 }
             },
-            "series": [
+            series: [
                 {
-                    "name": "活跃设备",
-                    "data": hcData
+                    name: "活跃设备",
+                    type: "spline",
+                    data: hcData
                 }
             ]
 

@@ -1,12 +1,6 @@
 <?php
 class LogManager {
 
-    function remove_utf8_bom($text) {
-        $bom = pack('H*','EFBBBF');
-        $text = preg_replace("/^$bom/", '', $text);
-        return $text;
-    }
-
     public static function mapChannelConfig($channels) {
         $config = new Zend\Config\Config(include '../config.php');
         $chnconf = $config->CHANNELS->toArray();
@@ -40,67 +34,6 @@ class LogManager {
             }
         }
         return $arr;
-    }
-
-    /**
-     * $t is short for $tokens
-     *  0. timestamp(UTC+8)
-     *  1. player_id
-     *  2. player_name
-     *  3. game_version
-     *  4. channel_name
-     *  5. device_id(IMEI, UDID)
-     *  6. os_version(6.0, 10.1.1)
-     *  7. network_type(Wi-Fi, 4G)
-     *  8. ip_address
-     *  9. is_new_device
-     * 
-     * return: array
-     *  [
-     *      {
-     *          timeStamp: '2017-11-05 11:23:34',
-     *          userId: 1000001,
-     *          version: 'v0.0.1.0001'
-     *          channel: 'dev_test_1',
-     *          deviceId: '423412341',
-     *          newDevice: 1
-     *      },
-     *      ...
-     *  ]
-     *  ** NO FILE CACHE **
-     * 
-     */
-    public static function fetchRegisterInPeriodFiltered($dateStart, $dateEnd, $channels) {
-        $config = new Zend\Config\Config(include '../config.php');
-
-        $start = new DateTime($dateStart);
-        $end = new DateTime($dateEnd);
-        $channelsFlip = array_flip($channels);
-        $ret = [];
-        while ($end >= $start) {
-            $dayStr = $start->format('Y-m-d');
-
-            $rawPath = $config->rootDir.DIRECTORY_SEPARATOR.'register'.DIRECTORY_SEPARATOR.$dayStr.'.txt';
-            if (file_exists($rawPath)) {
-                $lines = file($rawPath, FILE_IGNORE_NEW_LINES);
-                foreach ($lines as $k => $v) {
-                    $t = explode('|', trim($v));
-                    // channel must match
-                    if (isset($channelsFlip[$t[4]])) {
-                        $ret[] = array(
-                            'timeStamp' => $t[0],
-                            'userId' => $t[1],
-                            'version' => $t[3],
-                            'channel' => $t[4],
-                            'deviceId' => md5($t[5]),
-                            'newDevice' => $t[9]
-                        );
-                    }
-                }
-            }
-            $start->modify('+1 day');
-        }
-        return $ret;
     }
 
     public static function fetchActiveUserIds($date) {
@@ -139,6 +72,40 @@ class LogManager {
             }
         }
         return $arr;
+    }
+
+    public static function fetchLogWithinPeriodFiltered($dateStart, $dateEnd, $channels, $whichLog, $keyIndexes) {
+        $config = new Zend\Config\Config(include '../config.php');
+
+        $start = new DateTime($dateStart);
+        $end = new DateTime($dateEnd);
+        $channelsFlip = array_flip($channels);
+        $ret = [];
+        while ($end >= $start) {
+            $dayStr = $start->format('Y-m-d');
+
+            $rawPath = $config->rootDir.DIRECTORY_SEPARATOR.$whichLog.DIRECTORY_SEPARATOR.$dayStr.'.txt';
+            if (file_exists($rawPath)) {
+                $lines = file($rawPath, FILE_IGNORE_NEW_LINES);
+                foreach ($lines as $k => $v) {
+                    $t = explode('|', trim($v));
+                    // channel must match
+                    if (isset($channelsFlip[$t[$keyIndexes['channel']]])) {
+                        $obj = [];
+                        foreach ($keyIndexes as $kk => $vv) {
+                            if ($kk == "deviceId") {
+                                $obj = array_merge($obj, [$kk => md5($t[$vv])]);
+                            } else {
+                                $obj = array_merge($obj, [$kk => $t[$vv]]);
+                            }
+                        }
+                        $ret[] = $obj;
+                    }
+                }
+            }
+            $start->modify('+1 day');
+        }
+        return $ret;
     }
 
     /**
@@ -268,82 +235,6 @@ class LogManager {
             } else {
                 $arr = [];
             }
-        }
-        return $arr;
-    }
-
-    /**
-     *  $t = 
-     *  0. 时间戳(UTC+8)
-     *  1. 玩家ID
-     *  2. 商品类型
-     *  3. 充值金额(分)
-     *  4. 渠道名称
-     *  5. 支付方式
-     *  6. 设备ID
-     * 
-     *  returns:
-     *  [
-     *      {
-     *          timeStamp: 
-     *          amount:
-     *          channel
-     *          method:
-     *          deviceId:
-     *      },
-     *      ...
-     *  ]
-     */
-    public static function fetchPaymentsInPeriodFiltered($dateStart, $dateEnd, $channels) {
-        $config = new Zend\Config\Config(include '../config.php');
-
-        $start = new DateTime($dateStart);
-        $end = new DateTime($dateEnd);
-        $channelsFlip = array_flip($channels);
-        $ret = [];
-        while ($end >= $start) {
-            $dayStr = $start->format('Y-m-d');
-
-            $rawPath = $config->rootDir.DIRECTORY_SEPARATOR.'payment'.DIRECTORY_SEPARATOR.$dayStr.'.txt';
-            if (file_exists($rawPath)) {
-                $lines = file($rawPath, FILE_IGNORE_NEW_LINES);
-                foreach ($lines as $k => $v) {
-                    $t = explode('|', trim($v));
-                    // channel must match
-                    if (isset($channelsFlip[$t[4]])) {
-                        $ret[] = array(
-                            'timeStamp' => $t[0],
-                            'amount' => $t[3],
-                            'channel' => $t[4],
-                            'method' => $t[5],
-                            'deviceId' => md5($t[6])
-                        );
-                    }
-                }
-            }
-            $start->modify('+1 day');
-        }
-        return $ret;
-    }
-    
-    public static function fetchLogins($date) {
-        $config = new Zend\Config\Config(include '../config.php');
-        $rawLoginPath = $config->rootDir.DIRECTORY_SEPARATOR.'login'.DIRECTORY_SEPARATOR.$date.'.txt';
-        if (file_exists($rawLoginPath)) {
-            $arr = file($rawLoginPath, FILE_IGNORE_NEW_LINES);
-        } else {
-            $arr = [];
-        }
-        return $arr;
-    }
-    
-    public static function fetchLogouts($date) {
-        $config = new Zend\Config\Config(include '../config.php');
-        $rawLoginPath = $config->rootDir.DIRECTORY_SEPARATOR.'logout'.DIRECTORY_SEPARATOR.$date.'.txt';
-        if (file_exists($rawLoginPath)) {
-            $arr = file($rawLoginPath, FILE_IGNORE_NEW_LINES);
-        } else {
-            $arr = [];
         }
         return $arr;
     }

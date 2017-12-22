@@ -88,10 +88,12 @@ class NewUser extends React.Component {
         const config = {categories: [], data: []}; // highcharts config
         let dnid = {
             name: "新账号",
+            type: "spline",
             data: []
         };
         let dndid = {
             name: "新设备",
+            type: "spline",
             data: []
         };
         

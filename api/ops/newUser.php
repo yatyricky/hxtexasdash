@@ -18,7 +18,16 @@ if ($auth['result'] == 'auth') {
         $dbhelper = new DBHelper();
         $channels = $dbhelper->retrieveChannels($auth['uid']);
         
-        $bulk = LogManager::fetchRegisterInPeriodFiltered($_POST['start'], $_POST['end'], $channels);
+        $keyIndex = array(
+            'timeStamp' => 0,
+            'userId' => 1,
+            'version' => 3,
+            'channel' => 4,
+            'deviceId' => 5,
+            'newDevice' => 9
+        );
+        $bulk = LogManager::fetchLogWithinPeriodFiltered($_POST['start'], $_POST['end'], $channels, "register", $keyIndex);
+        
         $sumChannels = [];
         $sumVersions = [];
         foreach ($bulk as $k => $v) {
